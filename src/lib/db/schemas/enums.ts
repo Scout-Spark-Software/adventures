@@ -1,8 +1,26 @@
-import { pgEnum } from 'drizzle-orm/pg-core';
+import { pgEnum } from "drizzle-orm/pg-core";
 
-export const statusEnum = pgEnum('status', ['pending', 'approved', 'rejected']);
-export const roleEnum = pgEnum('role', ['admin', 'moderator', 'user']);
-export const entityTypeEnum = pgEnum('entity_type', ['hike', 'camping_site', 'alteration']);
-export const fileEntityTypeEnum = pgEnum('file_entity_type', ['hike', 'camping_site']);
-export const fileTypeEnum = pgEnum('file_type', ['image', 'document']);
-
+export const statusEnum = pgEnum("status", ["pending", "approved", "rejected"]);
+export const roleEnum = pgEnum("role", ["admin", "moderator", "user"]);
+export const entityTypeEnum = pgEnum("entity_type", [
+  "hike",
+  "camping_site",
+  "alteration",
+]);
+export const fileEntityTypeEnum = pgEnum("file_entity_type", [
+  "hike",
+  "camping_site",
+]);
+export const fileTypeEnum = pgEnum("file_type", ["image", "document"]);
+export const difficultyEnum = pgEnum("difficulty", [
+  "easy",
+  "moderate",
+  "hard",
+  "very_hard",
+]);
+export const distanceUnitEnum = pgEnum("distance_unit", [
+  "miles",
+  "kilometers",
+]);
+export const durationUnitEnum = pgEnum("duration_unit", ["minutes", "hours"]);
+export const elevationUnitEnum = pgEnum("elevation_unit", ["feet", "meters"]);
