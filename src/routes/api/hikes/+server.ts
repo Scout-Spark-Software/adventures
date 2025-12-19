@@ -58,6 +58,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     elevationUnit,
     trailType,
     features,
+    permitsRequired,
+    bestSeason,
+    waterSources,
+    parkingInfo,
   } = body;
 
   if (!name) {
@@ -68,17 +72,21 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     .insert(hikes)
     .values({
       name,
-      description,
-      addressId,
-      difficulty,
-      distance,
+      description: description || null,
+      addressId: addressId || null,
+      difficulty: difficulty || null,
+      distance: distance || null,
       distanceUnit: distanceUnit || "miles",
-      duration,
+      duration: duration || null,
       durationUnit: durationUnit || "hours",
-      elevation,
+      elevation: elevation || null,
       elevationUnit: elevationUnit || "feet",
-      trailType,
+      trailType: trailType || null,
       features: features ? JSON.parse(JSON.stringify(features)) : null,
+      permitsRequired: permitsRequired || null,
+      bestSeason: bestSeason ? JSON.parse(JSON.stringify(bestSeason)) : null,
+      waterSources: waterSources === true,
+      parkingInfo: parkingInfo || null,
       status: "pending",
       createdBy: user.id,
     })

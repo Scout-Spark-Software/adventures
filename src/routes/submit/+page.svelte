@@ -1,7 +1,11 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
+  import { goto } from "$app/navigation";
   import type { PageData, ActionData } from "./$types";
   import LocationPicker from "$lib/components/LocationPicker.svelte";
+  import FormSection from "$lib/components/FormSection.svelte";
+  import Tooltip from "$lib/components/Tooltip.svelte";
+  import SuccessAnimation from "$lib/components/SuccessAnimation.svelte";
 
   export let data: PageData;
   export let form: ActionData;
@@ -9,6 +13,10 @@
   let type: "hike" | "camping_site" = "hike";
   let loading = false;
   let errors: Record<string, string> = {};
+
+  // Success animation state
+  let showSuccess = false;
+  let successMessage = "";
 
   // Location fields
   let address = "";
@@ -27,6 +35,12 @@
   let durationUnit: "minutes" | "hours" = "hours";
   let elevation: number | null = null;
   let elevationUnit: "feet" | "meters" = "feet";
+
+  // New hike-specific fields
+  let permitsRequired = "";
+  let bestSeasons: string[] = [];
+  let waterSources = false;
+  let parkingInfo = "";
 
   // Dynamic features from database
   let selectedFeatures: string[] = [];
@@ -63,6 +77,22 @@
     }
   }
 
+  // New camping site-specific fields
+  let costPerNight: number | null = null;
+  let baseFee: number | null = null;
+  let operatingSeasonStart = "";
+  let operatingSeasonEnd = "";
+  let petPolicy = "";
+  let reservationRequired = false;
+  let siteType = "";
+  let firePolicy = "";
+
+  // Real-time validation reactive statements
+  $: permitsError =
+    permitsRequired.length > 500 ? "Must be less than 500 characters" : "";
+  $: parkingError =
+    parkingInfo.length > 1000 ? "Must be less than 1000 characters" : "";
+
   function validateHikeForm(formData: FormData): boolean {
     errors = {};
 
@@ -72,6 +102,16 @@
 
     if (!formData.get("city") || !formData.get("state")) {
       errors.address = "City and State are required";
+    }
+
+    const permits = formData.get("permits_required") as string;
+    if (permits && permits.length > 500) {
+      errors.permits = "Permits info must be less than 500 characters";
+    }
+
+    const parking = formData.get("parking_info") as string;
+    if (parking && parking.length > 1000) {
+      errors.parking = "Parking info must be less than 1000 characters";
     }
 
     return Object.keys(errors).length === 0;
@@ -86,6 +126,36 @@
 
     if (!formData.get("city") || !formData.get("state")) {
       errors.address = "City and State are required";
+    }
+
+    const costPerNightVal = formData.get("cost_per_night");
+    if (
+      costPerNightVal &&
+      (parseFloat(costPerNightVal as string) < 0 ||
+        parseFloat(costPerNightVal as string) > 10000)
+    ) {
+      errors.cost = "Cost per night must be between $0 and $10,000";
+    }
+
+    const baseFeeVal = formData.get("base_fee");
+    if (
+      baseFeeVal &&
+      (parseFloat(baseFeeVal as string) < 0 ||
+        parseFloat(baseFeeVal as string) > 10000)
+    ) {
+      errors.baseFee = "Base fee must be between $0 and $10,000";
+    }
+
+    if (!formData.get("pet_policy")) {
+      errors.petPolicy = "Pet policy is required";
+    }
+
+    if (!formData.get("site_type")) {
+      errors.siteType = "Site type is required";
+    }
+
+    if (!formData.get("fire_policy")) {
+      errors.firePolicy = "Fire policy is required";
     }
 
     return Object.keys(errors).length === 0;
@@ -119,7 +189,15 @@
           use:enhance={() => {
             return async ({ result, update }) => {
               loading = false;
-              await update();
+              if (result.type === "redirect") {
+                showSuccess = true;
+                successMessage = "Your hike has been submitted for review!";
+                setTimeout(() => {
+                  goto(result.location);
+                }, 2000);
+              } else {
+                await update();
+              }
             };
           }}
           on:submit={(e) => {
@@ -325,8 +403,10 @@
             </div>
 
             <!-- Features -->
-            <div class="border-t pt-6">
-              <h3 class="text-lg font-medium text-gray-900 mb-4">Features</h3>
+            <FormSection
+              title="Features"
+              icon="<path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z'/>"
+            >
               <div class="grid grid-cols-2 gap-3">
                 {#each data.featureTypes as feature}
                   <label class="flex items-center">
@@ -347,7 +427,116 @@
                 name="features"
                 value={JSON.stringify(selectedFeatures)}
               />
-            </div>
+            </FormSection>
+
+            <!-- Trail Conditions & Access -->
+            <FormSection
+              title="Trail Conditions & Access"
+              icon="<path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'/>"
+              description="Additional information about trail conditions and access requirements"
+            >
+              <div class="space-y-4">
+                <div>
+                  <label
+                    for="permits"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Permits or Passes Required
+                    <Tooltip
+                      text="Describe any permits, parking passes, or fees needed"
+                    />
+                  </label>
+                  <textarea
+                    id="permits"
+                    name="permits_required"
+                    bind:value={permitsRequired}
+                    rows="2"
+                    maxlength="500"
+                    placeholder="e.g., National Park Pass required, $5 parking fee"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    class:border-red-500={permitsError}
+                  ></textarea>
+                  {#if permitsError}
+                    <p class="mt-1 text-sm text-red-600">{permitsError}</p>
+                  {:else}
+                    <p class="mt-1 text-xs text-gray-500">
+                      {permitsRequired.length}/500 characters
+                    </p>
+                  {/if}
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Best Season to Visit
+                    <Tooltip
+                      text="Select all seasons when this trail is enjoyable"
+                    />
+                  </label>
+                  <div class="grid grid-cols-2 gap-3">
+                    {#each ["Spring", "Summer", "Fall", "Winter"] as season}
+                      <label class="flex items-center">
+                        <input
+                          type="checkbox"
+                          value={season.toLowerCase()}
+                          bind:group={bestSeasons}
+                          class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        />
+                        <span class="ml-2 text-sm text-gray-700">{season}</span>
+                      </label>
+                    {/each}
+                  </div>
+                  <input
+                    type="hidden"
+                    name="best_season"
+                    value={JSON.stringify(bestSeasons)}
+                  />
+                </div>
+
+                <label class="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="water_sources"
+                    bind:checked={waterSources}
+                    class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span class="ml-2 text-sm text-gray-700"
+                    >Water sources available on trail</span
+                  >
+                  <Tooltip
+                    text="Natural water sources like streams or lakes along the trail"
+                  />
+                </label>
+
+                <div>
+                  <label
+                    for="parking"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Parking Information
+                    <Tooltip
+                      text="Details about parking availability, capacity, and fees"
+                    />
+                  </label>
+                  <textarea
+                    id="parking"
+                    name="parking_info"
+                    bind:value={parkingInfo}
+                    rows="3"
+                    maxlength="1000"
+                    placeholder="e.g., Large paved parking lot, 50 spaces, $10 daily fee"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    class:border-red-500={parkingError}
+                  ></textarea>
+                  {#if parkingError}
+                    <p class="mt-1 text-sm text-red-600">{parkingError}</p>
+                  {:else}
+                    <p class="mt-1 text-xs text-gray-500">
+                      {parkingInfo.length}/1000 characters
+                    </p>
+                  {/if}
+                </div>
+              </div>
+            </FormSection>
 
             <button
               type="submit"
@@ -365,7 +554,16 @@
           use:enhance={() => {
             return async ({ result, update }) => {
               loading = false;
-              await update();
+              if (result.type === "redirect") {
+                showSuccess = true;
+                successMessage =
+                  "Your camping site has been submitted for review!";
+                setTimeout(() => {
+                  goto(result.location);
+                }, 2000);
+              } else {
+                await update();
+              }
             };
           }}
           on:submit={(e) => {
@@ -502,8 +700,10 @@
             </div>
 
             <!-- Facilities -->
-            <div class="border-t pt-6">
-              <h3 class="text-lg font-medium text-gray-900 mb-4">Facilities</h3>
+            <FormSection
+              title="Facilities"
+              icon="<path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'/>"
+            >
               <div class="grid grid-cols-2 gap-3">
                 {#each data.facilityTypes as facility}
                   <label class="flex items-center">
@@ -523,7 +723,204 @@
                 name="facilities"
                 value={JSON.stringify(facilities)}
               />
-            </div>
+            </FormSection>
+
+            <!-- Cost & Fees -->
+            <FormSection
+              title="Cost & Fees"
+              icon="<path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'/>"
+            >
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label
+                    for="base_fee"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Base Fee ($)
+                    <Tooltip text="One-time fee for the entire stay" />
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="10000"
+                    id="base_fee"
+                    name="base_fee"
+                    bind:value={baseFee}
+                    placeholder="0.00"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  />
+                  {#if errors.baseFee}
+                    <p class="mt-1 text-sm text-red-600">{errors.baseFee}</p>
+                  {/if}
+                </div>
+                <div>
+                  <label
+                    for="cost_per_night"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Cost Per Night ($)
+                    <Tooltip text="Nightly rate for camping" />
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="10000"
+                    id="cost_per_night"
+                    name="cost_per_night"
+                    bind:value={costPerNight}
+                    placeholder="0.00"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  />
+                  {#if errors.cost}
+                    <p class="mt-1 text-sm text-red-600">{errors.cost}</p>
+                  {/if}
+                </div>
+              </div>
+            </FormSection>
+
+            <!-- Site Policies & Information -->
+            <FormSection
+              title="Site Policies & Information"
+              icon="<path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'/>"
+            >
+              <div class="space-y-4">
+                <div>
+                  <label
+                    for="site_type"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Site Type *
+                    <Tooltip
+                      text="Whether this is a public or private campground"
+                    />
+                  </label>
+                  <select
+                    id="site_type"
+                    name="site_type"
+                    bind:value={siteType}
+                    required
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  >
+                    <option value="">Select site type...</option>
+                    <option value="public">Public</option>
+                    <option value="private">Private</option>
+                    <option value="public_private_partnership"
+                      >Public-Private Partnership</option
+                    >
+                  </select>
+                  {#if errors.siteType}
+                    <p class="mt-1 text-sm text-red-600">{errors.siteType}</p>
+                  {/if}
+                </div>
+
+                <div>
+                  <label
+                    for="pet_policy"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Pet Policy *
+                    <Tooltip text="Policy regarding pets at this campground" />
+                  </label>
+                  <select
+                    id="pet_policy"
+                    name="pet_policy"
+                    bind:value={petPolicy}
+                    required
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  >
+                    <option value="">Select pet policy...</option>
+                    <option value="allowed">Pets Allowed</option>
+                    <option value="not_allowed">Pets Not Allowed</option>
+                    <option value="restricted"
+                      >Restricted (e.g., leashed only)</option
+                    >
+                  </select>
+                  {#if errors.petPolicy}
+                    <p class="mt-1 text-sm text-red-600">{errors.petPolicy}</p>
+                  {/if}
+                </div>
+
+                <div>
+                  <label
+                    for="fire_policy"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Fire Policy *
+                    <Tooltip text="Policy regarding campfires" />
+                  </label>
+                  <select
+                    id="fire_policy"
+                    name="fire_policy"
+                    bind:value={firePolicy}
+                    required
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  >
+                    <option value="">Select fire policy...</option>
+                    <option value="allowed">Fires Allowed</option>
+                    <option value="not_allowed">Fires Not Allowed</option>
+                    <option value="fire_pits_only">Fire Pits Only</option>
+                    <option value="seasonal"
+                      >Seasonal (varies by time of year)</option
+                    >
+                  </select>
+                  {#if errors.firePolicy}
+                    <p class="mt-1 text-sm text-red-600">{errors.firePolicy}</p>
+                  {/if}
+                </div>
+
+                <label class="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="reservation_required"
+                    bind:checked={reservationRequired}
+                    class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span class="ml-2 text-sm text-gray-700"
+                    >Reservation Required</span
+                  >
+                  <Tooltip text="Check if advance reservations are mandatory" />
+                </label>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Operating Season
+                    <Tooltip text="Dates when the campground is open" />
+                  </label>
+                  <div class="grid grid-cols-2 gap-4">
+                    <div>
+                      <label
+                        for="season_start"
+                        class="block text-xs text-gray-600 mb-1">Start</label
+                      >
+                      <input
+                        type="text"
+                        id="season_start"
+                        name="operating_season_start"
+                        bind:value={operatingSeasonStart}
+                        placeholder="e.g., May 1 or Year-round"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        for="season_end"
+                        class="block text-xs text-gray-600 mb-1">End</label
+                      >
+                      <input
+                        type="text"
+                        id="season_end"
+                        name="operating_season_end"
+                        bind:value={operatingSeasonEnd}
+                        placeholder="e.g., October 31"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </FormSection>
 
             <button
               type="submit"
@@ -538,3 +935,7 @@
     </div>
   </div>
 </div>
+
+{#if showSuccess}
+  <SuccessAnimation message={successMessage} />
+{/if}

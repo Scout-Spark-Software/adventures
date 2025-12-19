@@ -104,6 +104,112 @@
           </div>
         {/if}
 
+        <!-- Trail Conditions & Access -->
+        {#if data.hike.dogFriendly || data.hike.waterSources || (data.hike.bestSeason && data.hike.bestSeason.length > 0) || data.hike.permitsRequired || data.hike.parkingInfo}
+          <div class="mb-6 pb-6 border-b">
+            <h2
+              class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2"
+            >
+              <svg
+                class="w-5 h-5 text-indigo-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              Trail Conditions & Access
+            </h2>
+            <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {#if data.hike.dogFriendly}
+                <div>
+                  <dt class="text-sm font-medium text-gray-500">
+                    Dog-Friendly
+                  </dt>
+                  <dd class="text-gray-900 flex items-center gap-1">
+                    <svg
+                      class="w-4 h-4 text-green-600"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Yes
+                  </dd>
+                </div>
+              {/if}
+              {#if data.hike.waterSources}
+                <div>
+                  <dt class="text-sm font-medium text-gray-500">
+                    Water Sources
+                  </dt>
+                  <dd class="text-gray-900 flex items-center gap-1">
+                    <svg
+                      class="w-4 h-4 text-blue-600"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Available
+                  </dd>
+                </div>
+              {/if}
+              {#if data.hike.bestSeason && Array.isArray(data.hike.bestSeason) && data.hike.bestSeason.length > 0}
+                <div class="md:col-span-2">
+                  <dt class="text-sm font-medium text-gray-500 mb-1">
+                    Best Season
+                  </dt>
+                  <dd class="flex flex-wrap gap-2">
+                    {#each data.hike.bestSeason as season}
+                      <span
+                        class="px-3 py-1 bg-indigo-100 text-indigo-800 text-sm rounded-full capitalize"
+                      >
+                        {season}
+                      </span>
+                    {/each}
+                  </dd>
+                </div>
+              {/if}
+              {#if data.hike.permitsRequired}
+                <div class="md:col-span-2">
+                  <dt class="text-sm font-medium text-gray-500 mb-1">
+                    Permits/Passes Required
+                  </dt>
+                  <dd
+                    class="text-gray-900 bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded"
+                  >
+                    {data.hike.permitsRequired}
+                  </dd>
+                </div>
+              {/if}
+              {#if data.hike.parkingInfo}
+                <div class="md:col-span-2">
+                  <dt class="text-sm font-medium text-gray-500 mb-1">
+                    Parking Information
+                  </dt>
+                  <dd class="text-gray-900 whitespace-pre-wrap">
+                    {data.hike.parkingInfo}
+                  </dd>
+                </div>
+              {/if}
+            </dl>
+          </div>
+        {/if}
+
         {#if data.files && data.files.length > 0}
           <div class="mt-6">
             <h3 class="text-lg font-medium text-gray-900 mb-4">

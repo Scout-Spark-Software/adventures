@@ -5,8 +5,14 @@ import {
   boolean,
   jsonb,
   uuid,
+  numeric,
 } from "drizzle-orm/pg-core";
-import { statusEnum } from "./enums";
+import {
+  statusEnum,
+  petPolicyEnum,
+  firePolicyEnum,
+  siteTypeEnum,
+} from "./enums";
 import { addresses } from "./addresses";
 
 export const campingSites = pgTable("camping_sites", {
@@ -18,6 +24,14 @@ export const campingSites = pgTable("camping_sites", {
   amenities: jsonb("amenities"),
   facilities: jsonb("facilities"),
   reservationInfo: text("reservation_info"),
+  costPerNight: numeric("cost_per_night", { precision: 10, scale: 2 }),
+  baseFee: numeric("base_fee", { precision: 10, scale: 2 }),
+  operatingSeasonStart: text("operating_season_start"),
+  operatingSeasonEnd: text("operating_season_end"),
+  petPolicy: petPolicyEnum("pet_policy").notNull(),
+  reservationRequired: boolean("reservation_required").default(false),
+  siteType: siteTypeEnum("site_type").notNull(),
+  firePolicy: firePolicyEnum("fire_policy").notNull(),
   status: statusEnum("status").default("pending").notNull(),
   featured: boolean("featured").default(false).notNull(),
   createdBy: uuid("created_by").notNull(),

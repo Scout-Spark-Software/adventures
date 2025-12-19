@@ -6,7 +6,7 @@ import { addresses } from "$lib/db/schemas";
 
 // Input sanitization helper
 function sanitizeString(value: string | null | undefined): string | null {
-  if (!value) return null;
+  if (!value || value.trim() === "") return null;
   return value.trim().slice(0, 1000); // Basic sanitization: trim and limit length
 }
 
@@ -64,6 +64,16 @@ export const actions: Actions = {
       addressId = newAddress.id;
     }
 
+    // Extract new hike fields
+    const permitsRequired = sanitizeString(
+      formData.get("permits_required") as string,
+    );
+    const bestSeason = formData.get("best_season")
+      ? JSON.parse(formData.get("best_season") as string)
+      : null;
+    const waterSources = formData.get("water_sources") === "on";
+    const parkingInfo = sanitizeString(formData.get("parking_info") as string);
+
     const hikeData = {
       name,
       description: sanitizeString(formData.get("description") as string),
@@ -82,6 +92,10 @@ export const actions: Actions = {
       features: formData.get("features")
         ? JSON.parse(formData.get("features") as string)
         : null,
+      permitsRequired,
+      bestSeason,
+      waterSources,
+      parkingInfo,
     };
 
     const response = await fetch("/api/hikes", {
@@ -134,6 +148,48 @@ export const actions: Actions = {
       addressId = newAddress.id;
     }
 
+    // Extract new camping site fields
+    const costPerNight = formData.get("cost_per_night")
+      ? parseFloat(formData.get("cost_per_night") as string)
+      : null;
+    const baseFee = formData.get("base_fee")
+      ? parseFloat(formData.get("base_fee") as string)
+      : null;
+    const operatingSeasonStart = sanitizeString(
+      formData.get("operating_season_start") as string,
+    );
+    const operatingSeasonEnd = sanitizeString(
+      formData.get("operating_season_end") as string,
+    );
+    const petPolicy = sanitizeString(formData.get("pet_policy") as string);
+    const reservationRequired = formData.get("reservation_required") === "on";
+    const siteType = sanitizeString(formData.get("site_type") as string);
+    const firePolicy = sanitizeString(formData.get("fire_policy") as string);
+
+    // Validate required enums
+    if (
+      !petPolicy ||
+      !["allowed", "not_allowed", "restricted"].includes(petPolicy)
+    ) {
+      return fail(400, { error: "Valid pet policy is required" });
+    }
+
+    if (
+      !siteType ||
+      !["public", "private", "public_private_partnership"].includes(siteType)
+    ) {
+      return fail(400, { error: "Valid site type is required" });
+    }
+
+    if (
+      !firePolicy ||
+      !["allowed", "not_allowed", "fire_pits_only", "seasonal"].includes(
+        firePolicy,
+      )
+    ) {
+      return fail(400, { error: "Valid fire policy is required" });
+    }
+
     const campingSiteData = {
       name,
       description: sanitizeString(formData.get("description") as string),
@@ -148,6 +204,14 @@ export const actions: Actions = {
       reservationInfo: sanitizeString(
         formData.get("reservation_info") as string,
       ),
+      costPerNight,
+      baseFee,
+      operatingSeasonStart,
+      operatingSeasonEnd,
+      petPolicy,
+      reservationRequired,
+      siteType,
+      firePolicy,
     };
 
     const response = await fetch("/api/camping-sites", {

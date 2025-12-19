@@ -53,6 +53,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     amenities,
     facilities,
     reservationInfo,
+    costPerNight,
+    baseFee,
+    operatingSeasonStart,
+    operatingSeasonEnd,
+    petPolicy,
+    reservationRequired,
+    siteType,
+    firePolicy,
   } = body;
 
   if (!name) {
@@ -63,12 +71,20 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     .insert(campingSites)
     .values({
       name,
-      description,
-      addressId,
-      capacity,
+      description: description || null,
+      addressId: addressId || null,
+      capacity: capacity || null,
       amenities: amenities ? JSON.parse(JSON.stringify(amenities)) : null,
       facilities: facilities ? JSON.parse(JSON.stringify(facilities)) : null,
-      reservationInfo,
+      reservationInfo: reservationInfo || null,
+      costPerNight: costPerNight || null,
+      baseFee: baseFee || null,
+      operatingSeasonStart: operatingSeasonStart || null,
+      operatingSeasonEnd: operatingSeasonEnd || null,
+      petPolicy,
+      reservationRequired: reservationRequired || false,
+      siteType,
+      firePolicy,
       status: "pending",
       createdBy: user.id,
     })

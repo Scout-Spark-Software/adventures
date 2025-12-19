@@ -24,3 +24,19 @@ export const distanceUnitEnum = pgEnum("distance_unit", [
 ]);
 export const durationUnitEnum = pgEnum("duration_unit", ["minutes", "hours"]);
 export const elevationUnitEnum = pgEnum("elevation_unit", ["feet", "meters"]);
+export const petPolicyEnum = pgEnum("pet_policy", [
+  "allowed",
+  "not_allowed",
+  "restricted",
+]);
+export const firePolicyEnum = pgEnum("fire_policy", [
+  "allowed",
+  "not_allowed",
+  "fire_pits_only",
+  "seasonal",
+]);
+export const siteTypeEnum = pgEnum("site_type", [
+  "public",
+  "private",
+  "public_private_partnership",
+]);
