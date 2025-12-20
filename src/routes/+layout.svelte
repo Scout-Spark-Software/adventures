@@ -2,9 +2,11 @@
   import "../app.css";
   import type { LayoutData } from "./$types";
   import logo from "$lib/assets/Scout-Spark-Hiking.png";
+  import { page } from "$app/stores";
 
   export let data: LayoutData;
   $: user = data.user;
+  $: currentPath = $page.url.pathname;
 </script>
 
 <nav class="bg-white shadow-md sticky top-0 z-50">
@@ -26,7 +28,9 @@
         <div class="hidden md:ml-8 md:flex md:space-x-1">
           <a
             href="/hikes"
-            class="border-sky-600 text-slate-900 inline-flex items-center px-4 pt-1 border-b-2 text-sm font-semibold hover:text-sky-700 transition-colors"
+            class="{currentPath.startsWith('/hikes')
+              ? 'border-sky-600 text-slate-900'
+              : 'border-transparent text-slate-600 hover:border-slate-300 hover:text-slate-900'} inline-flex items-center px-4 pt-1 border-b-2 text-sm font-semibold transition-colors"
           >
             <svg
               class="w-4 h-4 mr-1.5"
@@ -45,7 +49,9 @@
           </a>
           <a
             href="/camping"
-            class="border-transparent text-slate-600 hover:border-slate-300 hover:text-slate-900 inline-flex items-center px-4 pt-1 border-b-2 text-sm font-semibold transition-colors"
+            class="{currentPath.startsWith('/camping')
+              ? 'border-sky-600 text-slate-900'
+              : 'border-transparent text-slate-600 hover:border-slate-300 hover:text-slate-900'} inline-flex items-center px-4 pt-1 border-b-2 text-sm font-semibold transition-colors"
           >
             <svg
               class="w-4 h-4 mr-1.5"
