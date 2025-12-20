@@ -3,6 +3,7 @@ import type { PageServerLoad } from "./$types";
 import { db } from "$lib/db";
 import { addresses } from "$lib/db/schemas";
 import { eq } from "drizzle-orm";
+import { getUserRole } from "$lib/auth";
 
 export const load: PageServerLoad = async ({ params, fetch, locals }) => {
   const hike = await fetch(`/api/hikes/${params.id}`).then((r) => {
@@ -22,10 +23,17 @@ export const load: PageServerLoad = async ({ params, fetch, locals }) => {
     });
   }
 
+  // Get user role if logged in
+  let userRole = "user";
+  if (locals.userId) {
+    userRole = await getUserRole(locals.userId);
+  }
+
   return {
     hike,
     address,
     files: files || [],
     userId: locals.userId || null,
+    userRole,
   };
 };

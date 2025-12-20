@@ -6,6 +6,7 @@
   import FormSection from "$lib/components/FormSection.svelte";
   import Tooltip from "$lib/components/Tooltip.svelte";
   import SuccessAnimation from "$lib/components/SuccessAnimation.svelte";
+  import MultiStepForm from "$lib/components/MultiStepForm.svelte";
 
   export let data: PageData;
   export let form: ActionData;
@@ -13,6 +14,7 @@
   let type: "hike" | "camping_site" = "hike";
   let loading = false;
   let errors: Record<string, string> = {};
+  let currentStep = 0;
 
   // Success animation state
   let showSuccess = false;
@@ -86,6 +88,13 @@
   let reservationRequired = false;
   let siteType = "";
   let firePolicy = "";
+  let hikeName = "";
+  let hikeDescription = "";
+  let campingName = "";
+  let campingDescription = "";
+  let trailType = "";
+  let capacity = "";
+  let reservationInfo = "";
 
   // Real-time validation reactive statements
   $: permitsError =
@@ -93,72 +102,101 @@
   $: parkingError =
     parkingInfo.length > 1000 ? "Must be less than 1000 characters" : "";
 
-  function validateHikeForm(formData: FormData): boolean {
+  // Step titles for hikes
+  const hikeStepTitles = [
+    "Basic Info",
+    "Location",
+    "Trail Details",
+    "Features & Conditions",
+  ];
+
+  // Step titles for camping sites
+  const campingStepTitles = [
+    "Basic Info",
+    "Location",
+    "Site Details",
+    "Amenities & Facilities",
+    "Cost & Policies",
+  ];
+
+  function validateHikeStep(step: number): boolean {
     errors = {};
 
-    if (!formData.get("name")) {
-      errors.name = "Name is required";
+    if (step === 0) {
+      // Basic Info validation
+      if (!hikeName || hikeName.trim() === "") {
+        errors.name = "Name is required";
+        return false;
+      }
+    } else if (step === 1) {
+      // Location validation
+      if (!city || !state) {
+        errors.address = "City and State are required";
+        return false;
+      }
+    } else if (step === 3) {
+      // Features & Conditions validation
+      if (permitsRequired && permitsRequired.length > 500) {
+        errors.permits = "Permits info must be less than 500 characters";
+        return false;
+      }
+      if (parkingInfo && parkingInfo.length > 1000) {
+        errors.parking = "Parking info must be less than 1000 characters";
+        return false;
+      }
     }
 
-    if (!formData.get("city") || !formData.get("state")) {
-      errors.address = "City and State are required";
-    }
-
-    const permits = formData.get("permits_required") as string;
-    if (permits && permits.length > 500) {
-      errors.permits = "Permits info must be less than 500 characters";
-    }
-
-    const parking = formData.get("parking_info") as string;
-    if (parking && parking.length > 1000) {
-      errors.parking = "Parking info must be less than 1000 characters";
-    }
-
-    return Object.keys(errors).length === 0;
+    return true;
   }
 
-  function validateCampingForm(formData: FormData): boolean {
+  function validateCampingStep(step: number): boolean {
     errors = {};
 
-    if (!formData.get("name")) {
-      errors.name = "Name is required";
+    if (step === 0) {
+      // Basic Info validation
+      if (!campingName || campingName.trim() === "") {
+        errors.name = "Name is required";
+        return false;
+      }
+    } else if (step === 1) {
+      // Location validation
+      if (!city || !state) {
+        errors.address = "City and State are required";
+        return false;
+      }
+    } else if (step === 4) {
+      // Cost & Policies validation
+      if (costPerNight && (costPerNight < 0 || costPerNight > 10000)) {
+        errors.cost = "Cost per night must be between $0 and $10,000";
+        return false;
+      }
+      if (baseFee && (baseFee < 0 || baseFee > 10000)) {
+        errors.baseFee = "Base fee must be between $0 and $10,000";
+        return false;
+      }
+      if (!petPolicy) {
+        errors.petPolicy = "Pet policy is required";
+        return false;
+      }
+      if (!siteType) {
+        errors.siteType = "Site type is required";
+        return false;
+      }
+      if (!firePolicy) {
+        errors.firePolicy = "Fire policy is required";
+        return false;
+      }
     }
 
-    if (!formData.get("city") || !formData.get("state")) {
-      errors.address = "City and State are required";
-    }
+    return true;
+  }
 
-    const costPerNightVal = formData.get("cost_per_night");
-    if (
-      costPerNightVal &&
-      (parseFloat(costPerNightVal as string) < 0 ||
-        parseFloat(costPerNightVal as string) > 10000)
-    ) {
-      errors.cost = "Cost per night must be between $0 and $10,000";
+  function handleNext() {
+    if (type === "hike") {
+      return validateHikeStep(currentStep);
+    } else {
+      return validateCampingStep(currentStep);
     }
-
-    const baseFeeVal = formData.get("base_fee");
-    if (
-      baseFeeVal &&
-      (parseFloat(baseFeeVal as string) < 0 ||
-        parseFloat(baseFeeVal as string) > 10000)
-    ) {
-      errors.baseFee = "Base fee must be between $0 and $10,000";
-    }
-
-    if (!formData.get("pet_policy")) {
-      errors.petPolicy = "Pet policy is required";
-    }
-
-    if (!formData.get("site_type")) {
-      errors.siteType = "Site type is required";
-    }
-
-    if (!formData.get("fire_policy")) {
-      errors.firePolicy = "Fire policy is required";
-    }
-
-    return Object.keys(errors).length === 0;
   }
 </script>
 
@@ -175,6 +213,7 @@
         <label class="block text-sm font-medium text-gray-700 mb-2">Type</label>
         <select
           bind:value={type}
+          on:change={() => (currentStep = 0)}
           class="block w-full rounded-md border-gray-300 shadow-sm"
         >
           <option value="hike">Hike</option>
@@ -187,6 +226,7 @@
           method="POST"
           action="?/submitHike"
           use:enhance={() => {
+            loading = true;
             return async ({ result, update }) => {
               loading = false;
               if (result.type === "redirect") {
@@ -194,364 +234,380 @@
                 successMessage = "Your hike has been submitted for review!";
                 setTimeout(() => {
                   goto(result.location);
-                }, 2000);
+                }, 3000);
               } else {
                 await update();
               }
             };
           }}
-          on:submit={(e) => {
-            const formData = new FormData(e.currentTarget);
-            if (!validateHikeForm(formData)) {
-              e.preventDefault();
-              return;
-            }
-            loading = true;
-          }}
         >
-          <div class="space-y-6">
-            <!-- Basic Information -->
-            <div class="space-y-4">
-              <h3 class="text-lg font-medium text-gray-900 border-b pb-2">
-                Basic Information
-              </h3>
+          <!-- Hidden inputs to preserve data from other steps -->
+          {#if currentStep !== 0}
+            <input type="hidden" name="name" value={hikeName} />
+            <input type="hidden" name="description" value={hikeDescription} />
+          {/if}
+          {#if currentStep !== 1}
+            <input type="hidden" name="address" value={address} />
+            <input type="hidden" name="city" value={city} />
+            <input type="hidden" name="state" value={state} />
+            <input type="hidden" name="country" value={country} />
+            <input type="hidden" name="postal_code" value={postalCode} />
+            <input type="hidden" name="latitude" value={latitude} />
+            <input type="hidden" name="longitude" value={longitude} />
+          {/if}
 
-              <div>
-                <label
-                  for="name"
-                  class="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Name *
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  required
-                  class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                />
-                {#if errors.name}
-                  <p class="mt-1 text-sm text-red-600">{errors.name}</p>
-                {/if}
-              </div>
-
-              <div>
-                <label
-                  for="description"
-                  class="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Description
-                </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  rows="4"
-                  class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                ></textarea>
-              </div>
-            </div>
-
-            <!-- Location Information -->
-            <div class="border-t pt-6">
-              <h3 class="text-lg font-medium text-gray-900 mb-4">
-                Location Information
-              </h3>
-              <LocationPicker
-                bind:address
-                bind:city
-                bind:state
-                bind:country
-                bind:postalCode
-                bind:latitude
-                bind:longitude
-              />
-              {#if errors.address}
-                <p class="mt-1 text-sm text-red-600">{errors.address}</p>
-              {/if}
-            </div>
-
-            <!-- Trail Details -->
-            <div class="border-t pt-6 space-y-4">
-              <h3 class="text-lg font-medium text-gray-900 mb-4">
-                Trail Details
-              </h3>
-
-              <div>
-                <label
-                  for="difficulty"
-                  class="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Difficulty
-                </label>
-                <select
-                  id="difficulty"
-                  name="difficulty"
-                  bind:value={difficulty}
-                  class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                >
-                  <option value="">Select difficulty...</option>
-                  <option value="easy">Easy</option>
-                  <option value="moderate">Moderate</option>
-                  <option value="hard">Hard</option>
-                  <option value="very_hard">Very Hard</option>
-                </select>
-              </div>
-
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label
-                    for="distance"
-                    class="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Distance
-                  </label>
-                  <div class="flex gap-2">
-                    <input
-                      type="number"
-                      step="0.1"
-                      id="distance"
-                      name="distance"
-                      bind:value={distance}
-                      placeholder="5.2"
-                      class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    />
-                    <select
-                      name="distance_unit"
-                      bind:value={distanceUnit}
-                      class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    >
-                      <option value="miles">mi</option>
-                      <option value="kilometers">km</option>
-                    </select>
-                  </div>
-                </div>
+          <MultiStepForm
+            bind:currentStep
+            totalSteps={hikeStepTitles.length}
+            stepTitles={hikeStepTitles}
+            onNext={handleNext}
+            {loading}
+          >
+            {#if currentStep === 0}
+              <!-- Basic Information -->
+              <div class="space-y-4 animate-fadeIn">
+                <h3 class="text-lg font-medium text-gray-900 border-b pb-2">
+                  Basic Information
+                </h3>
 
                 <div>
                   <label
-                    for="duration"
+                    for="name"
                     class="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Duration
-                  </label>
-                  <div class="flex gap-2">
-                    <input
-                      type="number"
-                      step="0.5"
-                      id="duration"
-                      name="duration"
-                      bind:value={duration}
-                      placeholder="2.5"
-                      class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    />
-                    <select
-                      name="duration_unit"
-                      bind:value={durationUnit}
-                      class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    >
-                      <option value="minutes">min</option>
-                      <option value="hours">hrs</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label
-                    for="elevation"
-                    class="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Elevation Gain
-                  </label>
-                  <div class="flex gap-2">
-                    <input
-                      type="number"
-                      step="1"
-                      id="elevation"
-                      name="elevation"
-                      bind:value={elevation}
-                      placeholder="500"
-                      class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    />
-                    <select
-                      name="elevation_unit"
-                      bind:value={elevationUnit}
-                      class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    >
-                      <option value="feet">ft</option>
-                      <option value="meters">m</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label
-                    for="trail_type"
-                    class="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Trail Type
+                    Name *
                   </label>
                   <input
                     type="text"
-                    id="trail_type"
-                    name="trail_type"
-                    placeholder="Loop, Out & Back, Point to Point"
+                    id="name"
+                    name="name"
+                    bind:value={hikeName}
+                    required
                     class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                   />
-                </div>
-              </div>
-            </div>
-
-            <!-- Features -->
-            <FormSection
-              title="Features"
-              icon="<path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z'/>"
-            >
-              <div class="grid grid-cols-2 gap-3">
-                {#each data.featureTypes as feature}
-                  <label class="flex items-center">
-                    <input
-                      type="checkbox"
-                      value={feature.name}
-                      bind:group={selectedFeatures}
-                      class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <span class="ml-2 text-sm text-gray-700"
-                      >{feature.name}</span
-                    >
-                  </label>
-                {/each}
-              </div>
-              <input
-                type="hidden"
-                name="features"
-                value={JSON.stringify(selectedFeatures)}
-              />
-            </FormSection>
-
-            <!-- Trail Conditions & Access -->
-            <FormSection
-              title="Trail Conditions & Access"
-              icon="<path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'/>"
-              description="Additional information about trail conditions and access requirements"
-            >
-              <div class="space-y-4">
-                <div>
-                  <label
-                    for="permits"
-                    class="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Permits or Passes Required
-                    <Tooltip
-                      text="Describe any permits, parking passes, or fees needed"
-                    />
-                  </label>
-                  <textarea
-                    id="permits"
-                    name="permits_required"
-                    bind:value={permitsRequired}
-                    rows="2"
-                    maxlength="500"
-                    placeholder="e.g., National Park Pass required, $5 parking fee"
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    class:border-red-500={permitsError}
-                  ></textarea>
-                  {#if permitsError}
-                    <p class="mt-1 text-sm text-red-600">{permitsError}</p>
-                  {:else}
-                    <p class="mt-1 text-xs text-gray-500">
-                      {permitsRequired.length}/500 characters
-                    </p>
+                  {#if errors.name}
+                    <p class="mt-1 text-sm text-red-600">{errors.name}</p>
                   {/if}
                 </div>
 
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Best Season to Visit
-                    <Tooltip
-                      text="Select all seasons when this trail is enjoyable"
-                    />
+                  <label
+                    for="description"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Description
                   </label>
+                  <textarea
+                    id="description"
+                    name="description"
+                    bind:value={hikeDescription}
+                    rows="4"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  ></textarea>
+                </div>
+              </div>
+            {:else if currentStep === 1}
+              <!-- Location Information -->
+              <div class="animate-fadeIn">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">
+                  Location Information
+                </h3>
+                <LocationPicker
+                  bind:address
+                  bind:city
+                  bind:state
+                  bind:country
+                  bind:postalCode
+                  bind:latitude
+                  bind:longitude
+                />
+                {#if errors.address}
+                  <p class="mt-1 text-sm text-red-600">{errors.address}</p>
+                {/if}
+              </div>
+            {:else if currentStep === 2}
+              <!-- Trail Details -->
+              <div class="space-y-4 animate-fadeIn">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">
+                  Trail Details
+                </h3>
+
+                <div>
+                  <label
+                    for="difficulty"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Difficulty
+                  </label>
+                  <select
+                    id="difficulty"
+                    name="difficulty"
+                    bind:value={difficulty}
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  >
+                    <option value="">Select difficulty...</option>
+                    <option value="easy">Easy</option>
+                    <option value="moderate">Moderate</option>
+                    <option value="hard">Hard</option>
+                    <option value="very_hard">Very Hard</option>
+                  </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      for="distance"
+                      class="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Distance
+                    </label>
+                    <div class="flex gap-2">
+                      <input
+                        type="number"
+                        step="0.1"
+                        id="distance"
+                        name="distance"
+                        bind:value={distance}
+                        placeholder="5.2"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      />
+                      <select
+                        name="distance_unit"
+                        bind:value={distanceUnit}
+                        class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      >
+                        <option value="miles">mi</option>
+                        <option value="kilometers">km</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      for="duration"
+                      class="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Duration
+                    </label>
+                    <div class="flex gap-2">
+                      <input
+                        type="number"
+                        step="0.5"
+                        id="duration"
+                        name="duration"
+                        bind:value={duration}
+                        placeholder="2.5"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      />
+                      <select
+                        name="duration_unit"
+                        bind:value={durationUnit}
+                        class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      >
+                        <option value="minutes">min</option>
+                        <option value="hours">hrs</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      for="elevation"
+                      class="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Elevation Gain
+                    </label>
+                    <div class="flex gap-2">
+                      <input
+                        type="number"
+                        step="1"
+                        id="elevation"
+                        name="elevation"
+                        bind:value={elevation}
+                        placeholder="500"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      />
+                      <select
+                        name="elevation_unit"
+                        bind:value={elevationUnit}
+                        class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      >
+                        <option value="feet">ft</option>
+                        <option value="meters">m</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      for="trail_type"
+                      class="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Trail Type
+                    </label>
+                    <input
+                      type="text"
+                      id="trail_type"
+                      name="trail_type"
+                      bind:value={trailType}
+                      placeholder="Loop, Out & Back, Point to Point"
+                      class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            {:else if currentStep === 3}
+              <!-- Features & Conditions -->
+              <div class="space-y-6 animate-fadeIn">
+                <FormSection
+                  title="Features"
+                  icon="<path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z'/>"
+                >
                   <div class="grid grid-cols-2 gap-3">
-                    {#each ["Spring", "Summer", "Fall", "Winter"] as season}
+                    {#each data.featureTypes as feature}
                       <label class="flex items-center">
                         <input
                           type="checkbox"
-                          value={season.toLowerCase()}
-                          bind:group={bestSeasons}
+                          value={feature.name}
+                          bind:group={selectedFeatures}
                           class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                         />
-                        <span class="ml-2 text-sm text-gray-700">{season}</span>
+                        <span class="ml-2 text-sm text-gray-700"
+                          >{feature.name}</span
+                        >
                       </label>
                     {/each}
                   </div>
                   <input
                     type="hidden"
-                    name="best_season"
-                    value={JSON.stringify(bestSeasons)}
+                    name="features"
+                    value={JSON.stringify(selectedFeatures)}
                   />
-                </div>
+                </FormSection>
 
-                <label class="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="water_sources"
-                    bind:checked={waterSources}
-                    class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                  />
-                  <span class="ml-2 text-sm text-gray-700"
-                    >Water sources available on trail</span
-                  >
-                  <Tooltip
-                    text="Natural water sources like streams or lakes along the trail"
-                  />
-                </label>
+                <FormSection
+                  title="Trail Conditions & Access"
+                  icon="<path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'/>"
+                  description="Additional information about trail conditions and access requirements"
+                >
+                  <div class="space-y-4">
+                    <div>
+                      <label
+                        for="permits"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Permits or Passes Required
+                        <Tooltip
+                          text="Describe any permits, parking passes, or fees needed"
+                        />
+                      </label>
+                      <textarea
+                        id="permits"
+                        name="permits_required"
+                        bind:value={permitsRequired}
+                        rows="2"
+                        maxlength="500"
+                        placeholder="e.g., National Park Pass required, $5 parking fee"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        class:border-red-500={permitsError}
+                      ></textarea>
+                      {#if permitsError}
+                        <p class="mt-1 text-sm text-red-600">{permitsError}</p>
+                      {:else}
+                        <p class="mt-1 text-xs text-gray-500">
+                          {permitsRequired.length}/500 characters
+                        </p>
+                      {/if}
+                    </div>
 
-                <div>
-                  <label
-                    for="parking"
-                    class="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Parking Information
-                    <Tooltip
-                      text="Details about parking availability, capacity, and fees"
-                    />
-                  </label>
-                  <textarea
-                    id="parking"
-                    name="parking_info"
-                    bind:value={parkingInfo}
-                    rows="3"
-                    maxlength="1000"
-                    placeholder="e.g., Large paved parking lot, 50 spaces, $10 daily fee"
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    class:border-red-500={parkingError}
-                  ></textarea>
-                  {#if parkingError}
-                    <p class="mt-1 text-sm text-red-600">{parkingError}</p>
-                  {:else}
-                    <p class="mt-1 text-xs text-gray-500">
-                      {parkingInfo.length}/1000 characters
-                    </p>
-                  {/if}
-                </div>
+                    <div>
+                      <label
+                        class="block text-sm font-medium text-gray-700 mb-2"
+                      >
+                        Best Season to Visit
+                        <Tooltip
+                          text="Select all seasons when this trail is enjoyable"
+                        />
+                      </label>
+                      <div class="grid grid-cols-2 gap-3">
+                        {#each ["Spring", "Summer", "Fall", "Winter"] as season}
+                          <label class="flex items-center">
+                            <input
+                              type="checkbox"
+                              value={season.toLowerCase()}
+                              bind:group={bestSeasons}
+                              class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            />
+                            <span class="ml-2 text-sm text-gray-700"
+                              >{season}</span
+                            >
+                          </label>
+                        {/each}
+                      </div>
+                      <input
+                        type="hidden"
+                        name="best_season"
+                        value={JSON.stringify(bestSeasons)}
+                      />
+                    </div>
+
+                    <label class="flex items-center">
+                      <input
+                        type="checkbox"
+                        name="water_sources"
+                        bind:checked={waterSources}
+                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span class="ml-2 text-sm text-gray-700"
+                        >Water sources available on trail</span
+                      >
+                      <Tooltip
+                        text="Natural water sources like streams or lakes along the trail"
+                      />
+                    </label>
+
+                    <div>
+                      <label
+                        for="parking"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Parking Information
+                        <Tooltip
+                          text="Details about parking availability, capacity, and fees"
+                        />
+                      </label>
+                      <textarea
+                        id="parking"
+                        name="parking_info"
+                        bind:value={parkingInfo}
+                        rows="3"
+                        maxlength="1000"
+                        placeholder="e.g., Large paved parking lot, 50 spaces, $10 daily fee"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        class:border-red-500={parkingError}
+                      ></textarea>
+                      {#if parkingError}
+                        <p class="mt-1 text-sm text-red-600">{parkingError}</p>
+                      {:else}
+                        <p class="mt-1 text-xs text-gray-500">
+                          {parkingInfo.length}/1000 characters
+                        </p>
+                      {/if}
+                    </div>
+                  </div>
+                </FormSection>
               </div>
-            </FormSection>
-
-            <button
-              type="submit"
-              disabled={loading}
-              class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "Submitting..." : "Submit Hike"}
-            </button>
-          </div>
+            {/if}
+          </MultiStepForm>
         </form>
       {:else}
         <form
           method="POST"
           action="?/submitCampingSite"
           use:enhance={() => {
+            loading = true;
             return async ({ result, update }) => {
               loading = false;
               if (result.type === "redirect") {
@@ -560,376 +616,410 @@
                   "Your camping site has been submitted for review!";
                 setTimeout(() => {
                   goto(result.location);
-                }, 2000);
+                }, 3000);
               } else {
                 await update();
               }
             };
           }}
-          on:submit={(e) => {
-            const formData = new FormData(e.currentTarget);
-            if (!validateCampingForm(formData)) {
-              e.preventDefault();
-              return;
-            }
-            loading = true;
-          }}
         >
-          <div class="space-y-6">
-            <!-- Basic Information -->
-            <div class="space-y-4">
-              <h3 class="text-lg font-medium text-gray-900 border-b pb-2">
-                Basic Information
-              </h3>
+          <!-- Hidden inputs to preserve data from other steps -->
+          {#if currentStep !== 0}
+            <input type="hidden" name="name" value={campingName} />
+            <input
+              type="hidden"
+              name="description"
+              value={campingDescription}
+            />
+          {/if}
+          {#if currentStep !== 1}
+            <input type="hidden" name="address" value={address} />
+            <input type="hidden" name="city" value={city} />
+            <input type="hidden" name="state" value={state} />
+            <input type="hidden" name="country" value={country} />
+            <input type="hidden" name="postal_code" value={postalCode} />
+            <input type="hidden" name="latitude" value={latitude} />
+            <input type="hidden" name="longitude" value={longitude} />
+          {/if}
 
-              <div>
-                <label
-                  for="name"
-                  class="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Name *
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  required
-                  class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          <MultiStepForm
+            bind:currentStep
+            totalSteps={campingStepTitles.length}
+            stepTitles={campingStepTitles}
+            onNext={handleNext}
+            {loading}
+          >
+            {#if currentStep === 0}
+              <!-- Basic Information -->
+              <div class="space-y-4 animate-fadeIn">
+                <h3 class="text-lg font-medium text-gray-900 border-b pb-2">
+                  Basic Information
+                </h3>
+
+                <div>
+                  <label
+                    for="name"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Name *
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    bind:value={campingName}
+                    required
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  />
+                  {#if errors.name}
+                    <p class="mt-1 text-sm text-red-600">{errors.name}</p>
+                  {/if}
+                </div>
+
+                <div>
+                  <label
+                    for="description"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Description
+                  </label>
+                  <textarea
+                    id="description"
+                    name="description"
+                    bind:value={campingDescription}
+                    rows="4"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  ></textarea>
+                </div>
+              </div>
+            {:else if currentStep === 1}
+              <!-- Location Information -->
+              <div class="animate-fadeIn">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">
+                  Location Information
+                </h3>
+                <LocationPicker
+                  bind:address
+                  bind:city
+                  bind:state
+                  bind:country
+                  bind:postalCode
+                  bind:latitude
+                  bind:longitude
                 />
-                {#if errors.name}
-                  <p class="mt-1 text-sm text-red-600">{errors.name}</p>
+                {#if errors.address}
+                  <p class="mt-1 text-sm text-red-600">{errors.address}</p>
                 {/if}
               </div>
+            {:else if currentStep === 2}
+              <!-- Site Details -->
+              <div class="space-y-4 animate-fadeIn">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">
+                  Site Details
+                </h3>
 
-              <div>
-                <label
-                  for="description"
-                  class="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Description
-                </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  rows="4"
-                  class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                ></textarea>
-              </div>
-            </div>
-
-            <!-- Location Information -->
-            <div class="border-t pt-6">
-              <h3 class="text-lg font-medium text-gray-900 mb-4">
-                Location Information
-              </h3>
-              <LocationPicker
-                bind:address
-                bind:city
-                bind:state
-                bind:country
-                bind:postalCode
-                bind:latitude
-                bind:longitude
-              />
-              {#if errors.address}
-                <p class="mt-1 text-sm text-red-600">{errors.address}</p>
-              {/if}
-            </div>
-
-            <!-- Site Details -->
-            <div class="border-t pt-6 space-y-4">
-              <h3 class="text-lg font-medium text-gray-900 mb-4">
-                Site Details
-              </h3>
-
-              <div>
-                <label
-                  for="capacity"
-                  class="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Capacity (number of people/tents)
-                </label>
-                <input
-                  type="text"
-                  id="capacity"
-                  name="capacity"
-                  placeholder="20 people or 10 tents"
-                  class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                />
-              </div>
-
-              <div>
-                <label
-                  for="reservation_info"
-                  class="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Reservation Info
-                </label>
-                <textarea
-                  id="reservation_info"
-                  name="reservation_info"
-                  rows="3"
-                  placeholder="How to make reservations, website, phone number, etc."
-                  class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                ></textarea>
-              </div>
-            </div>
-
-            <!-- Amenities -->
-            <div class="border-t pt-6">
-              <h3 class="text-lg font-medium text-gray-900 mb-4">Amenities</h3>
-              <div class="grid grid-cols-2 gap-3">
-                {#each data.amenityTypes as amenity}
-                  <label class="flex items-center">
-                    <input
-                      type="checkbox"
-                      bind:checked={amenities[amenity.key]}
-                      class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <span class="ml-2 text-sm text-gray-700"
-                      >{amenity.name}</span
-                    >
-                  </label>
-                {/each}
-              </div>
-              <input
-                type="hidden"
-                name="amenities"
-                value={JSON.stringify(amenities)}
-              />
-            </div>
-
-            <!-- Facilities -->
-            <FormSection
-              title="Facilities"
-              icon="<path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'/>"
-            >
-              <div class="grid grid-cols-2 gap-3">
-                {#each data.facilityTypes as facility}
-                  <label class="flex items-center">
-                    <input
-                      type="checkbox"
-                      bind:checked={facilities[facility.key]}
-                      class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <span class="ml-2 text-sm text-gray-700"
-                      >{facility.name}</span
-                    >
-                  </label>
-                {/each}
-              </div>
-              <input
-                type="hidden"
-                name="facilities"
-                value={JSON.stringify(facilities)}
-              />
-            </FormSection>
-
-            <!-- Cost & Fees -->
-            <FormSection
-              title="Cost & Fees"
-              icon="<path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'/>"
-            >
-              <div class="grid grid-cols-2 gap-4">
                 <div>
                   <label
-                    for="base_fee"
+                    for="capacity"
                     class="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Base Fee ($)
-                    <Tooltip text="One-time fee for the entire stay" />
+                    Capacity (number of people/tents)
                   </label>
                   <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="10000"
-                    id="base_fee"
-                    name="base_fee"
-                    bind:value={baseFee}
-                    placeholder="0.00"
+                    type="text"
+                    id="capacity"
+                    name="capacity"
+                    bind:value={capacity}
+                    placeholder="20 people or 10 tents"
                     class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                   />
-                  {#if errors.baseFee}
-                    <p class="mt-1 text-sm text-red-600">{errors.baseFee}</p>
-                  {/if}
                 </div>
+
                 <div>
                   <label
-                    for="cost_per_night"
+                    for="reservation_info"
                     class="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Cost Per Night ($)
-                    <Tooltip text="Nightly rate for camping" />
+                    Reservation Info
                   </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="10000"
-                    id="cost_per_night"
-                    name="cost_per_night"
-                    bind:value={costPerNight}
-                    placeholder="0.00"
+                  <textarea
+                    id="reservation_info"
+                    name="reservation_info"
+                    bind:value={reservationInfo}
+                    rows="3"
+                    placeholder="How to make reservations, website, phone number, etc."
                     class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  />
-                  {#if errors.cost}
-                    <p class="mt-1 text-sm text-red-600">{errors.cost}</p>
-                  {/if}
+                  ></textarea>
                 </div>
               </div>
-            </FormSection>
-
-            <!-- Site Policies & Information -->
-            <FormSection
-              title="Site Policies & Information"
-              icon="<path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'/>"
-            >
-              <div class="space-y-4">
+            {:else if currentStep === 3}
+              <!-- Amenities & Facilities -->
+              <div class="space-y-6 animate-fadeIn">
                 <div>
-                  <label
-                    for="site_type"
-                    class="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Site Type *
-                    <Tooltip
-                      text="Whether this is a public or private campground"
-                    />
-                  </label>
-                  <select
-                    id="site_type"
-                    name="site_type"
-                    bind:value={siteType}
-                    required
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  >
-                    <option value="">Select site type...</option>
-                    <option value="public">Public</option>
-                    <option value="private">Private</option>
-                    <option value="public_private_partnership"
-                      >Public-Private Partnership</option
-                    >
-                  </select>
-                  {#if errors.siteType}
-                    <p class="mt-1 text-sm text-red-600">{errors.siteType}</p>
-                  {/if}
-                </div>
-
-                <div>
-                  <label
-                    for="pet_policy"
-                    class="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Pet Policy *
-                    <Tooltip text="Policy regarding pets at this campground" />
-                  </label>
-                  <select
-                    id="pet_policy"
-                    name="pet_policy"
-                    bind:value={petPolicy}
-                    required
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  >
-                    <option value="">Select pet policy...</option>
-                    <option value="allowed">Pets Allowed</option>
-                    <option value="not_allowed">Pets Not Allowed</option>
-                    <option value="restricted"
-                      >Restricted (e.g., leashed only)</option
-                    >
-                  </select>
-                  {#if errors.petPolicy}
-                    <p class="mt-1 text-sm text-red-600">{errors.petPolicy}</p>
-                  {/if}
-                </div>
-
-                <div>
-                  <label
-                    for="fire_policy"
-                    class="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Fire Policy *
-                    <Tooltip text="Policy regarding campfires" />
-                  </label>
-                  <select
-                    id="fire_policy"
-                    name="fire_policy"
-                    bind:value={firePolicy}
-                    required
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  >
-                    <option value="">Select fire policy...</option>
-                    <option value="allowed">Fires Allowed</option>
-                    <option value="not_allowed">Fires Not Allowed</option>
-                    <option value="fire_pits_only">Fire Pits Only</option>
-                    <option value="seasonal"
-                      >Seasonal (varies by time of year)</option
-                    >
-                  </select>
-                  {#if errors.firePolicy}
-                    <p class="mt-1 text-sm text-red-600">{errors.firePolicy}</p>
-                  {/if}
-                </div>
-
-                <label class="flex items-center">
+                  <h3 class="text-lg font-medium text-gray-900 mb-4">
+                    Amenities
+                  </h3>
+                  <div class="grid grid-cols-2 gap-3">
+                    {#each data.amenityTypes as amenity}
+                      <label class="flex items-center">
+                        <input
+                          type="checkbox"
+                          bind:checked={amenities[amenity.key]}
+                          class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        />
+                        <span class="ml-2 text-sm text-gray-700"
+                          >{amenity.name}</span
+                        >
+                      </label>
+                    {/each}
+                  </div>
                   <input
-                    type="checkbox"
-                    name="reservation_required"
-                    bind:checked={reservationRequired}
-                    class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                    type="hidden"
+                    name="amenities"
+                    value={JSON.stringify(amenities)}
                   />
-                  <span class="ml-2 text-sm text-gray-700"
-                    >Reservation Required</span
-                  >
-                  <Tooltip text="Check if advance reservations are mandatory" />
-                </label>
+                </div>
 
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Operating Season
-                    <Tooltip text="Dates when the campground is open" />
-                  </label>
+                <FormSection
+                  title="Facilities"
+                  icon="<path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'/>"
+                >
+                  <div class="grid grid-cols-2 gap-3">
+                    {#each data.facilityTypes as facility}
+                      <label class="flex items-center">
+                        <input
+                          type="checkbox"
+                          bind:checked={facilities[facility.key]}
+                          class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        />
+                        <span class="ml-2 text-sm text-gray-700"
+                          >{facility.name}</span
+                        >
+                      </label>
+                    {/each}
+                  </div>
+                  <input
+                    type="hidden"
+                    name="facilities"
+                    value={JSON.stringify(facilities)}
+                  />
+                </FormSection>
+              </div>
+            {:else if currentStep === 4}
+              <!-- Cost & Policies -->
+              <div class="space-y-6 animate-fadeIn">
+                <FormSection
+                  title="Cost & Fees"
+                  icon="<path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'/>"
+                >
                   <div class="grid grid-cols-2 gap-4">
                     <div>
                       <label
-                        for="season_start"
-                        class="block text-xs text-gray-600 mb-1">Start</label
+                        for="base_fee"
+                        class="block text-sm font-medium text-gray-700 mb-1"
                       >
+                        Base Fee ($)
+                        <Tooltip text="One-time fee for the entire stay" />
+                      </label>
                       <input
-                        type="text"
-                        id="season_start"
-                        name="operating_season_start"
-                        bind:value={operatingSeasonStart}
-                        placeholder="e.g., May 1 or Year-round"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="10000"
+                        id="base_fee"
+                        name="base_fee"
+                        bind:value={baseFee}
+                        placeholder="0.00"
                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                       />
+                      {#if errors.baseFee}
+                        <p class="mt-1 text-sm text-red-600">
+                          {errors.baseFee}
+                        </p>
+                      {/if}
                     </div>
                     <div>
                       <label
-                        for="season_end"
-                        class="block text-xs text-gray-600 mb-1">End</label
+                        for="cost_per_night"
+                        class="block text-sm font-medium text-gray-700 mb-1"
                       >
+                        Cost Per Night ($)
+                        <Tooltip text="Nightly rate for camping" />
+                      </label>
                       <input
-                        type="text"
-                        id="season_end"
-                        name="operating_season_end"
-                        bind:value={operatingSeasonEnd}
-                        placeholder="e.g., October 31"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="10000"
+                        id="cost_per_night"
+                        name="cost_per_night"
+                        bind:value={costPerNight}
+                        placeholder="0.00"
                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                       />
+                      {#if errors.cost}
+                        <p class="mt-1 text-sm text-red-600">{errors.cost}</p>
+                      {/if}
                     </div>
                   </div>
-                </div>
-              </div>
-            </FormSection>
+                </FormSection>
 
-            <button
-              type="submit"
-              disabled={loading}
-              class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "Submitting..." : "Submit Camping Site"}
-            </button>
-          </div>
+                <FormSection
+                  title="Site Policies & Information"
+                  icon="<path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'/>"
+                >
+                  <div class="space-y-4">
+                    <div>
+                      <label
+                        for="site_type"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Site Type *
+                        <Tooltip
+                          text="Whether this is a public or private campground"
+                        />
+                      </label>
+                      <select
+                        id="site_type"
+                        name="site_type"
+                        bind:value={siteType}
+                        required
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      >
+                        <option value="">Select site type...</option>
+                        <option value="public">Public</option>
+                        <option value="private">Private</option>
+                        <option value="public_private_partnership"
+                          >Public-Private Partnership</option
+                        >
+                      </select>
+                      {#if errors.siteType}
+                        <p class="mt-1 text-sm text-red-600">
+                          {errors.siteType}
+                        </p>
+                      {/if}
+                    </div>
+
+                    <div>
+                      <label
+                        for="pet_policy"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Pet Policy *
+                        <Tooltip
+                          text="Policy regarding pets at this campground"
+                        />
+                      </label>
+                      <select
+                        id="pet_policy"
+                        name="pet_policy"
+                        bind:value={petPolicy}
+                        required
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      >
+                        <option value="">Select pet policy...</option>
+                        <option value="allowed">Pets Allowed</option>
+                        <option value="not_allowed">Pets Not Allowed</option>
+                        <option value="restricted"
+                          >Restricted (e.g., leashed only)</option
+                        >
+                      </select>
+                      {#if errors.petPolicy}
+                        <p class="mt-1 text-sm text-red-600">
+                          {errors.petPolicy}
+                        </p>
+                      {/if}
+                    </div>
+
+                    <div>
+                      <label
+                        for="fire_policy"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Fire Policy *
+                        <Tooltip text="Policy regarding campfires" />
+                      </label>
+                      <select
+                        id="fire_policy"
+                        name="fire_policy"
+                        bind:value={firePolicy}
+                        required
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      >
+                        <option value="">Select fire policy...</option>
+                        <option value="allowed">Fires Allowed</option>
+                        <option value="not_allowed">Fires Not Allowed</option>
+                        <option value="fire_pits_only">Fire Pits Only</option>
+                        <option value="seasonal"
+                          >Seasonal (varies by time of year)</option
+                        >
+                      </select>
+                      {#if errors.firePolicy}
+                        <p class="mt-1 text-sm text-red-600">
+                          {errors.firePolicy}
+                        </p>
+                      {/if}
+                    </div>
+
+                    <label class="flex items-center">
+                      <input
+                        type="checkbox"
+                        name="reservation_required"
+                        bind:checked={reservationRequired}
+                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span class="ml-2 text-sm text-gray-700"
+                        >Reservation Required</span
+                      >
+                      <Tooltip
+                        text="Check if advance reservations are mandatory"
+                      />
+                    </label>
+
+                    <div>
+                      <label
+                        class="block text-sm font-medium text-gray-700 mb-2"
+                      >
+                        Operating Season
+                        <Tooltip text="Dates when the campground is open" />
+                      </label>
+                      <div class="grid grid-cols-2 gap-4">
+                        <div>
+                          <label
+                            for="season_start"
+                            class="block text-xs text-gray-600 mb-1"
+                            >Start</label
+                          >
+                          <input
+                            type="text"
+                            id="season_start"
+                            name="operating_season_start"
+                            bind:value={operatingSeasonStart}
+                            placeholder="e.g., May 1 or Year-round"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                          />
+                        </div>
+                        <div>
+                          <label
+                            for="season_end"
+                            class="block text-xs text-gray-600 mb-1">End</label
+                          >
+                          <input
+                            type="text"
+                            id="season_end"
+                            name="operating_season_end"
+                            bind:value={operatingSeasonEnd}
+                            placeholder="e.g., October 31"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </FormSection>
+              </div>
+            {/if}
+          </MultiStepForm>
         </form>
       {/if}
     </div>
@@ -939,3 +1029,20 @@
 {#if showSuccess}
   <SuccessAnimation message={successMessage} />
 {/if}
+
+<style>
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.3s ease-out;
+  }
+</style>

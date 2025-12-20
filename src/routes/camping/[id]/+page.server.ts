@@ -3,6 +3,7 @@ import type { PageServerLoad } from "./$types";
 import { db } from "$lib/db";
 import { addresses } from "$lib/db/schemas";
 import { eq } from "drizzle-orm";
+import { getUserRole } from "$lib/auth";
 
 export const load: PageServerLoad = async ({ params, fetch, locals }) => {
   const campingSite = await fetch(`/api/camping-sites/${params.id}`).then(
@@ -24,10 +25,17 @@ export const load: PageServerLoad = async ({ params, fetch, locals }) => {
     });
   }
 
+  // Get user role if logged in
+  let userRole = "user";
+  if (locals.userId) {
+    userRole = await getUserRole(locals.userId);
+  }
+
   return {
     campingSite,
     address,
     files: files || [],
     userId: locals.userId || null,
+    userRole,
   };
 };
