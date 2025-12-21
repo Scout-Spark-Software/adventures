@@ -1,8 +1,8 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { db } from "$lib/db";
-import { hikes } from "$lib/db/schemas";
-import { eq, and, or, desc } from "drizzle-orm";
+import { hikes, addresses } from "$lib/db/schemas";
+import { eq, and, or, desc, ilike, gte, lte, sql } from "drizzle-orm";
 import { requireAuth } from "$lib/auth/middleware";
 import { addToModerationQueue } from "$lib/moderation";
 
@@ -11,6 +11,15 @@ export const GET: RequestHandler = async ({ url, locals }) => {
   const featured = url.searchParams.get("featured");
   const limit = parseInt(url.searchParams.get("limit") || "50");
   const offset = parseInt(url.searchParams.get("offset") || "0");
+
+  // New filter parameters
+  const search = url.searchParams.get("search");
+  const difficulty = url.searchParams.get("difficulty");
+  const trailType = url.searchParams.get("trailType");
+  const minDistance = url.searchParams.get("minDistance");
+  const maxDistance = url.searchParams.get("maxDistance");
+  const featuresParam = url.searchParams.get("features");
+  const dogFriendly = url.searchParams.get("dogFriendly");
 
   const conditions = [];
 
@@ -31,14 +40,98 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     conditions.push(eq(hikes.status, "approved"));
   }
 
-  const results = await db.query.hikes.findMany({
-    where: conditions.length > 0 ? and(...conditions) : undefined,
-    limit,
-    offset,
-    orderBy: [desc(hikes.createdAt)],
-  });
+  // Filter by difficulty
+  if (difficulty) {
+    conditions.push(eq(hikes.difficulty, difficulty as any));
+  }
 
-  return json(results);
+  // Filter by trail type
+  if (trailType) {
+    conditions.push(eq(hikes.trailType, trailType));
+  }
+
+  // Filter by distance range
+  if (minDistance) {
+    conditions.push(gte(hikes.distance, minDistance));
+  }
+  if (maxDistance) {
+    conditions.push(lte(hikes.distance, maxDistance));
+  }
+
+  // Filter by dog friendly
+  if (dogFriendly === "true") {
+    conditions.push(eq(hikes.dogFriendly, true));
+  }
+
+  // Filter by features (JSONB array contains)
+  if (featuresParam) {
+    const featureIds = featuresParam.split(",").filter(Boolean);
+    if (featureIds.length > 0) {
+      conditions.push(
+        sql`${hikes.features} @> ${JSON.stringify(featureIds)}::jsonb`,
+      );
+    }
+  }
+
+  // Build query with optional address join for search
+  let query;
+  if (search) {
+    // Join with addresses for location search
+    query = db
+      .select({
+        id: hikes.id,
+        name: hikes.name,
+        description: hikes.description,
+        addressId: hikes.addressId,
+        difficulty: hikes.difficulty,
+        distance: hikes.distance,
+        distanceUnit: hikes.distanceUnit,
+        duration: hikes.duration,
+        durationUnit: hikes.durationUnit,
+        elevation: hikes.elevation,
+        elevationUnit: hikes.elevationUnit,
+        trailType: hikes.trailType,
+        features: hikes.features,
+        dogFriendly: hikes.dogFriendly,
+        permitsRequired: hikes.permitsRequired,
+        bestSeason: hikes.bestSeason,
+        waterSources: hikes.waterSources,
+        parkingInfo: hikes.parkingInfo,
+        status: hikes.status,
+        featured: hikes.featured,
+        createdBy: hikes.createdBy,
+        createdAt: hikes.createdAt,
+        updatedAt: hikes.updatedAt,
+      })
+      .from(hikes)
+      .leftJoin(addresses, eq(hikes.addressId, addresses.id))
+      .where(
+        and(
+          ...conditions,
+          or(
+            ilike(hikes.name, `%${search}%`),
+            ilike(hikes.description, `%${search}%`),
+            ilike(addresses.city, `%${search}%`),
+            ilike(addresses.state, `%${search}%`),
+          ),
+        ),
+      )
+      .limit(limit)
+      .offset(offset)
+      .orderBy(desc(hikes.createdAt));
+
+    const results = await query;
+    return json(results);
+  } else {
+    const results = await db.query.hikes.findMany({
+      where: conditions.length > 0 ? and(...conditions) : undefined,
+      limit,
+      offset,
+      orderBy: [desc(hikes.createdAt)],
+    });
+
+    return json(results);
+  }
 };
 
 export const POST: RequestHandler = async ({ request, locals }) => {
