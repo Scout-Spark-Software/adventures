@@ -20,6 +20,7 @@
 
   // Mobile drawer state
   let isDrawerOpen = false;
+  let isApplyingFilters = false;
 
   function toggleFeature(featureId: string) {
     if (selectedFeatures.includes(featureId)) {
@@ -29,7 +30,8 @@
     }
   }
 
-  function applyFilters() {
+  async function applyFilters() {
+    isApplyingFilters = true;
     const params = new URLSearchParams();
 
     if (search) params.set("search", search);
@@ -42,8 +44,9 @@
     if (dogFriendly) params.set("dogFriendly", "true");
 
     const queryString = params.toString();
-    goto(`/hikes${queryString ? "?" + queryString : ""}`);
+    await goto(`/hikes${queryString ? "?" + queryString : ""}`);
     isDrawerOpen = false;
+    isApplyingFilters = false;
   }
 
   function clearFilters() {
@@ -72,8 +75,16 @@
 <button
   class="lg:hidden fixed bottom-6 right-6 z-40 bg-emerald-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-emerald-700 transition-all flex items-center gap-2"
   on:click={() => (isDrawerOpen = true)}
+  aria-label="Open filters menu"
+  aria-expanded={isDrawerOpen}
 >
-  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <svg
+    class="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+  >
     <path
       stroke-linecap="round"
       stroke-linejoin="round"
@@ -85,6 +96,7 @@
   {#if activeFilterCount > 0}
     <span
       class="bg-white text-emerald-600 px-2 py-0.5 rounded-full text-xs font-semibold"
+      aria-label="{activeFilterCount} active filters"
     >
       {activeFilterCount}
     </span>
@@ -98,6 +110,7 @@
     on:click={() => (isDrawerOpen = false)}
     role="button"
     tabindex="0"
+    aria-label="Close filters"
     on:keydown={(e) => e.key === "Escape" && (isDrawerOpen = false)}
   ></div>
 {/if}
@@ -115,8 +128,15 @@
     <button
       class="p-2 hover:bg-gray-100 rounded-lg"
       on:click={() => (isDrawerOpen = false)}
+      aria-label="Close filters"
     >
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg
+        class="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
         <path
           stroke-linecap="round"
           stroke-linejoin="round"
@@ -210,10 +230,17 @@
 
   <!-- Trail Features Multi-Select -->
   <div class="mb-4">
-    <label class="block text-sm font-medium text-gray-700 mb-2">
+    <label
+      class="block text-sm font-medium text-gray-700 mb-2"
+      id="trail-features-label"
+    >
       Trail Features
     </label>
-    <div class="flex flex-wrap gap-2">
+    <div
+      class="flex flex-wrap gap-2"
+      role="group"
+      aria-labelledby="trail-features-label"
+    >
       {#each featureTypes as feature (feature.id)}
         <button
           type="button"
@@ -222,6 +249,8 @@
             {selectedFeatures.includes(feature.id)
             ? 'bg-emerald-600 text-white'
             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+          aria-pressed={selectedFeatures.includes(feature.id)}
+          aria-label="Toggle {feature.name} filter"
         >
           {feature.name}
         </button>
@@ -246,14 +275,43 @@
     <button
       type="button"
       on:click={applyFilters}
-      class="flex-1 bg-emerald-600 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-emerald-700 transition-colors"
+      disabled={isApplyingFilters}
+      class="flex-1 bg-emerald-600 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+      aria-label="Apply selected filters"
     >
-      Apply Filters
+      {#if isApplyingFilters}
+        <svg
+          class="animate-spin h-4 w-4"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
+        Applying...
+      {:else}
+        Apply Filters
+      {/if}
     </button>
     <button
       type="button"
       on:click={clearFilters}
-      class="px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+      disabled={isApplyingFilters}
+      class="px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      aria-label="Clear all filters"
     >
       Clear All
     </button>
