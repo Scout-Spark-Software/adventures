@@ -1,8 +1,8 @@
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 import { db } from "$lib/db";
-import { addresses } from "$lib/db/schemas";
-import { eq } from "drizzle-orm";
+import { addresses, notes } from "$lib/db/schemas";
+import { eq, and, count } from "drizzle-orm";
 import { getUserRole } from "$lib/auth";
 
 export const load: PageServerLoad = async ({ params, fetch, locals }) => {
@@ -31,11 +31,27 @@ export const load: PageServerLoad = async ({ params, fetch, locals }) => {
     userRole = await getUserRole(locals.userId);
   }
 
+  // Get notes count for this user and camping site
+  let notesCount = 0;
+  if (locals.userId) {
+    const result = await db
+      .select({ count: count() })
+      .from(notes)
+      .where(
+        and(
+          eq(notes.userId, locals.userId),
+          eq(notes.campingSiteId, params.id),
+        ),
+      );
+    notesCount = result[0]?.count || 0;
+  }
+
   return {
     campingSite,
     address,
     files: files || [],
     userId: locals.userId || null,
     userRole,
+    notesCount,
   };
 };

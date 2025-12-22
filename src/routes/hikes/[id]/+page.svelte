@@ -3,10 +3,24 @@
   import FavoriteButton from "$lib/components/FavoriteButton.svelte";
   import ModerationBadge from "$lib/components/ModerationBadge.svelte";
   import LocationMap from "$lib/components/LocationMap.svelte";
+  import Tabs from "$lib/components/Tabs.svelte";
+  import NotesSection from "$lib/components/NotesSection.svelte";
 
   export let data: PageData;
 
   $: isAdmin = data.userRole === "admin";
+
+  let activeTab = "details";
+  let notesCount = data.notesCount;
+
+  $: tabs = [
+    { id: "details", label: "Details" },
+    { id: "notes", label: "Notes", count: notesCount },
+  ];
+
+  function handleNotesCountChanged(event: CustomEvent<number>) {
+    notesCount = event.detail;
+  }
 </script>
 
 <svelte:head>
@@ -254,151 +268,34 @@
 
   <!-- Main Content -->
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Main Column -->
-      <div class="lg:col-span-2 space-y-6">
-        {#if data.hike.description}
-          <div class="bg-white shadow rounded-lg p-5">
-            <h2 class="text-xl font-bold text-gray-900 mb-3">
-              About This Trail
-            </h2>
-            <div class="prose max-w-none">
-              <p class="text-gray-700 leading-relaxed">
-                {data.hike.description}
-              </p>
-            </div>
-          </div>
-        {/if}
+    <Tabs {tabs} bind:activeTab>
+      {#if activeTab === "details"}
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Main Column -->
+          <div class="lg:col-span-2 space-y-6">
+            {#if data.hike.description}
+              <div class="bg-white shadow rounded-lg p-5">
+                <h2 class="text-xl font-bold text-gray-900 mb-3">
+                  About This Trail
+                </h2>
+                <div class="prose max-w-none">
+                  <p class="text-gray-700 leading-relaxed">
+                    {data.hike.description}
+                  </p>
+                </div>
+              </div>
+            {/if}
 
-        {#if data.hike.features && Array.isArray(data.hike.features) && data.hike.features.length > 0}
-          <div class="bg-white shadow rounded-lg p-5">
-            <h2 class="text-xl font-bold text-gray-900 mb-3">Features</h2>
-            <div class="flex flex-wrap gap-2">
-              {#each data.hike.features as feature}
-                <span
-                  class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-indigo-50 text-indigo-700 border border-indigo-200"
-                >
-                  <svg
-                    class="w-4 h-4 mr-1.5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                  {feature}
-                </span>
-              {/each}
-            </div>
-          </div>
-        {/if}
-
-        <!-- Trail Conditions & Access -->
-        {#if data.hike.dogFriendly || data.hike.waterSources || (data.hike.bestSeason && data.hike.bestSeason.length > 0) || data.hike.permitsRequired || data.hike.parkingInfo}
-          <div class="bg-white shadow rounded-lg p-5">
-            <h2
-              class="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2"
-            >
-              <svg
-                class="w-6 h-6 text-indigo-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              Trail Conditions & Access
-            </h2>
-            <dl class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {#if data.hike.dogFriendly}
-                <div class="flex items-start gap-3">
-                  <div
-                    class="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center"
-                  >
-                    <svg
-                      class="w-6 h-6 text-green-600"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
+            {#if data.hike.features && Array.isArray(data.hike.features) && data.hike.features.length > 0}
+              <div class="bg-white shadow rounded-lg p-5">
+                <h2 class="text-xl font-bold text-gray-900 mb-3">Features</h2>
+                <div class="flex flex-wrap gap-2">
+                  {#each data.hike.features as feature}
+                    <span
+                      class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-indigo-50 text-indigo-700 border border-indigo-200"
                     >
-                      <path
-                        fill-rule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <dt class="text-sm font-medium text-gray-500">
-                      Dog-Friendly
-                    </dt>
-                    <dd class="text-gray-900 font-medium">Yes</dd>
-                  </div>
-                </div>
-              {/if}
-              {#if data.hike.waterSources}
-                <div class="flex items-start gap-3">
-                  <div
-                    class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center"
-                  >
-                    <svg
-                      class="w-6 h-6 text-blue-600"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <dt class="text-sm font-medium text-gray-500">
-                      Water Sources
-                    </dt>
-                    <dd class="text-gray-900 font-medium">
-                      Available on trail
-                    </dd>
-                  </div>
-                </div>
-              {/if}
-              {#if data.hike.bestSeason && Array.isArray(data.hike.bestSeason) && data.hike.bestSeason.length > 0}
-                <div class="md:col-span-2">
-                  <dt class="text-sm font-medium text-gray-500 mb-2">
-                    Best Season to Visit
-                  </dt>
-                  <dd class="flex flex-wrap gap-2">
-                    {#each data.hike.bestSeason as season}
-                      <span
-                        class="px-4 py-2 bg-indigo-50 text-indigo-700 text-sm font-medium rounded-lg border border-indigo-200 capitalize"
-                      >
-                        {season}
-                      </span>
-                    {/each}
-                  </dd>
-                </div>
-              {/if}
-              {#if data.hike.permitsRequired}
-                <div class="md:col-span-2">
-                  <dt class="text-sm font-medium text-gray-500 mb-2">
-                    Permits/Passes Required
-                  </dt>
-                  <dd
-                    class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg"
-                  >
-                    <div class="flex items-start gap-2">
                       <svg
-                        class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5"
+                        class="w-4 h-4 mr-1.5"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -407,124 +304,24 @@
                           stroke-linecap="round"
                           stroke-linejoin="round"
                           stroke-width="2"
-                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                          d="M5 13l4 4L19 7"
                         />
                       </svg>
-                      <span class="text-gray-900"
-                        >{data.hike.permitsRequired}</span
-                      >
-                    </div>
-                  </dd>
+                      {feature}
+                    </span>
+                  {/each}
                 </div>
-              {/if}
-              {#if data.hike.parkingInfo}
-                <div class="md:col-span-2">
-                  <dt class="text-sm font-medium text-gray-500 mb-2">
-                    Parking Information
-                  </dt>
-                  <dd class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <p class="text-gray-900 whitespace-pre-wrap">
-                      {data.hike.parkingInfo}
-                    </p>
-                  </dd>
-                </div>
-              {/if}
-            </dl>
-          </div>
-        {/if}
-
-        {#if data.files && data.files.length > 0}
-          <div class="bg-white shadow rounded-lg p-5">
-            <h2 class="text-xl font-bold text-gray-900 mb-3">
-              Images & Documents
-            </h2>
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {#each data.files as file}
-                {#if file.fileType === "image"}
-                  <img
-                    src={file.fileUrl}
-                    alt={file.fileName}
-                    class="w-full h-48 object-cover rounded-lg shadow hover:shadow-lg transition-shadow"
-                  />
-                {:else}
-                  <a
-                    href={file.fileUrl}
-                    target="_blank"
-                    class="block p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 hover:border-indigo-300 transition-colors"
-                  >
-                    <svg
-                      class="w-8 h-8 text-gray-400 mb-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                      />
-                    </svg>
-                    <p class="text-sm font-medium text-gray-900 truncate">
-                      {file.fileName}
-                    </p>
-                  </a>
-                {/if}
-              {/each}
-            </div>
-          </div>
-        {/if}
-      </div>
-
-      <!-- Sidebar -->
-      <div class="lg:col-span-1">
-        {#if data.address}
-          <div class="bg-white shadow rounded-lg p-5 sticky top-6">
-            <h2
-              class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2"
-            >
-              <svg
-                class="w-5 h-5 text-indigo-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                />
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-              Location Details
-            </h2>
-
-            <!-- Map -->
-            {#if data.address.latitude && data.address.longitude}
-              <div class="mb-4">
-                <LocationMap
-                  latitude={data.address.latitude}
-                  longitude={data.address.longitude}
-                  height="250px"
-                />
               </div>
-              <div class="flex gap-2 mb-4">
-                <a
-                  href="https://www.openstreetmap.org/?mlat={data.address
-                    .latitude}&mlon={data.address.longitude}#map=15/{data
-                    .address.latitude}/{data.address.longitude}"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800"
+            {/if}
+
+            <!-- Trail Conditions & Access -->
+            {#if data.hike.dogFriendly || data.hike.waterSources || (data.hike.bestSeason && data.hike.bestSeason.length > 0) || data.hike.permitsRequired || data.hike.parkingInfo}
+              <div class="bg-white shadow rounded-lg p-5">
+                <h2
+                  class="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2"
                 >
                   <svg
-                    class="w-4 h-4"
+                    class="w-6 h-6 text-indigo-600"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -533,63 +330,292 @@
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       stroke-width="2"
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  OpenStreetMap
-                </a>
+                  Trail Conditions & Access
+                </h2>
+                <dl class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {#if data.hike.dogFriendly}
+                    <div class="flex items-start gap-3">
+                      <div
+                        class="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center"
+                      >
+                        <svg
+                          class="w-6 h-6 text-green-600"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fill-rule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clip-rule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                      <div>
+                        <dt class="text-sm font-medium text-gray-500">
+                          Dog-Friendly
+                        </dt>
+                        <dd class="text-gray-900 font-medium">Yes</dd>
+                      </div>
+                    </div>
+                  {/if}
+                  {#if data.hike.waterSources}
+                    <div class="flex items-start gap-3">
+                      <div
+                        class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center"
+                      >
+                        <svg
+                          class="w-6 h-6 text-blue-600"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fill-rule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clip-rule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                      <div>
+                        <dt class="text-sm font-medium text-gray-500">
+                          Water Sources
+                        </dt>
+                        <dd class="text-gray-900 font-medium">
+                          Available on trail
+                        </dd>
+                      </div>
+                    </div>
+                  {/if}
+                  {#if data.hike.bestSeason && Array.isArray(data.hike.bestSeason) && data.hike.bestSeason.length > 0}
+                    <div class="md:col-span-2">
+                      <dt class="text-sm font-medium text-gray-500 mb-2">
+                        Best Season to Visit
+                      </dt>
+                      <dd class="flex flex-wrap gap-2">
+                        {#each data.hike.bestSeason as season}
+                          <span
+                            class="px-4 py-2 bg-indigo-50 text-indigo-700 text-sm font-medium rounded-lg border border-indigo-200 capitalize"
+                          >
+                            {season}
+                          </span>
+                        {/each}
+                      </dd>
+                    </div>
+                  {/if}
+                  {#if data.hike.permitsRequired}
+                    <div class="md:col-span-2">
+                      <dt class="text-sm font-medium text-gray-500 mb-2">
+                        Permits/Passes Required
+                      </dt>
+                      <dd
+                        class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg"
+                      >
+                        <div class="flex items-start gap-2">
+                          <svg
+                            class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                            />
+                          </svg>
+                          <span class="text-gray-900"
+                            >{data.hike.permitsRequired}</span
+                          >
+                        </div>
+                      </dd>
+                    </div>
+                  {/if}
+                  {#if data.hike.parkingInfo}
+                    <div class="md:col-span-2">
+                      <dt class="text-sm font-medium text-gray-500 mb-2">
+                        Parking Information
+                      </dt>
+                      <dd
+                        class="bg-gray-50 p-4 rounded-lg border border-gray-200"
+                      >
+                        <p class="text-gray-900 whitespace-pre-wrap">
+                          {data.hike.parkingInfo}
+                        </p>
+                      </dd>
+                    </div>
+                  {/if}
+                </dl>
               </div>
             {/if}
 
-            <div class="space-y-3 text-gray-700">
-              {#if data.address.address}
-                <p class="font-medium">{data.address.address}</p>
-              {/if}
-              <p>
-                {#if data.address.city}{data.address
-                    .city}{/if}{#if data.address.city && data.address.state},
-                {/if}{#if data.address.state}{data.address.state}{/if}
-                {#if data.address.postalCode}
-                  {data.address.postalCode}
-                {/if}
-              </p>
-              {#if data.address.country}
-                <p>{data.address.country}</p>
-              {/if}
-              {#if data.address.latitude && data.address.longitude}
-                <div class="pt-3 border-t border-gray-200">
-                  <p class="text-xs text-gray-500 mb-2">GPS Coordinates</p>
-                  <p class="text-sm font-mono bg-gray-50 p-2 rounded mb-2">
-                    {data.address.latitude}, {data.address.longitude}
-                  </p>
-                  <a
-                    href="https://www.google.com/maps/search/?api=1&query={data
-                      .address.latitude},{data.address.longitude}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800"
-                  >
-                    <svg
-                      class="w-3 h-3"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+            {#if data.files && data.files.length > 0}
+              <div class="bg-white shadow rounded-lg p-5">
+                <h2 class="text-xl font-bold text-gray-900 mb-3">
+                  Images & Documents
+                </h2>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {#each data.files as file}
+                    {#if file.fileType === "image"}
+                      <img
+                        src={file.fileUrl}
+                        alt={file.fileName}
+                        class="w-full h-48 object-cover rounded-lg shadow hover:shadow-lg transition-shadow"
                       />
-                    </svg>
-                    Open in Google Maps
-                  </a>
+                    {:else}
+                      <a
+                        href={file.fileUrl}
+                        target="_blank"
+                        class="block p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 hover:border-indigo-300 transition-colors"
+                      >
+                        <svg
+                          class="w-8 h-8 text-gray-400 mb-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                          />
+                        </svg>
+                        <p class="text-sm font-medium text-gray-900 truncate">
+                          {file.fileName}
+                        </p>
+                      </a>
+                    {/if}
+                  {/each}
                 </div>
-              {/if}
-            </div>
+              </div>
+            {/if}
           </div>
-        {/if}
-      </div>
-    </div>
+
+          <!-- Sidebar -->
+          <div class="lg:col-span-1">
+            {#if data.address}
+              <div class="bg-white shadow rounded-lg p-5 sticky top-6">
+                <h2
+                  class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2"
+                >
+                  <svg
+                    class="w-5 h-5 text-indigo-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                  Location Details
+                </h2>
+
+                <!-- Map -->
+                {#if data.address.latitude && data.address.longitude}
+                  <div class="mb-4">
+                    <LocationMap
+                      latitude={data.address.latitude}
+                      longitude={data.address.longitude}
+                      height="250px"
+                    />
+                  </div>
+                  <div class="flex gap-2 mb-4">
+                    <a
+                      href="https://www.openstreetmap.org/?mlat={data.address
+                        .latitude}&mlon={data.address.longitude}#map=15/{data
+                        .address.latitude}/{data.address.longitude}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800"
+                    >
+                      <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                        />
+                      </svg>
+                      OpenStreetMap
+                    </a>
+                  </div>
+                {/if}
+
+                <div class="space-y-3 text-gray-700">
+                  {#if data.address.address}
+                    <p class="font-medium">{data.address.address}</p>
+                  {/if}
+                  <p>
+                    {#if data.address.city}{data.address
+                        .city}{/if}{#if data.address.city && data.address.state},
+                    {/if}{#if data.address.state}{data.address.state}{/if}
+                    {#if data.address.postalCode}
+                      {data.address.postalCode}
+                    {/if}
+                  </p>
+                  {#if data.address.country}
+                    <p>{data.address.country}</p>
+                  {/if}
+                  {#if data.address.latitude && data.address.longitude}
+                    <div class="pt-3 border-t border-gray-200">
+                      <p class="text-xs text-gray-500 mb-2">GPS Coordinates</p>
+                      <p class="text-sm font-mono bg-gray-50 p-2 rounded mb-2">
+                        {data.address.latitude}, {data.address.longitude}
+                      </p>
+                      <a
+                        href="https://www.google.com/maps/search/?api=1&query={data
+                          .address.latitude},{data.address.longitude}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800"
+                      >
+                        <svg
+                          class="w-3 h-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                          />
+                        </svg>
+                        Open in Google Maps
+                      </a>
+                    </div>
+                  {/if}
+                </div>
+              </div>
+            {/if}
+          </div>
+        </div>
+      {:else if activeTab === "notes"}
+        <NotesSection
+          hikeId={data.hike.id}
+          userId={data.userId}
+          on:notesCountChanged={handleNotesCountChanged}
+        />
+      {/if}
+    </Tabs>
   </div>
 </div>
