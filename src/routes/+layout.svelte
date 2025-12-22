@@ -11,16 +11,16 @@
 
 <nav class="bg-white shadow-md sticky top-0 z-50">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex justify-between h-20">
+    <div class="flex justify-between h-16">
       <div class="flex">
         <div class="flex-shrink-0 flex items-center">
-          <a href="/" class="flex items-center gap-3 group">
+          <a href="/" class="flex items-center gap-2 group">
             <img
               src={logo}
               alt="Scouts Adventures Logo"
-              class="w-12 h-12 transition-transform group-hover:rotate-12"
+              class="w-10 h-10 transition-transform group-hover:rotate-12"
             />
-            <span class="text-xl font-bold text-slate-900 hidden sm:block">
+            <span class="text-lg font-bold text-slate-900 hidden sm:block">
               Scouts Adventures
             </span>
           </a>
@@ -121,21 +121,21 @@
   <slot />
 </main>
 
-<footer class="bg-slate-900 text-slate-300 mt-20">
-  <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+<footer class="bg-slate-900 text-slate-300 mt-12">
+  <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
       <div>
-        <div class="flex items-center gap-2 mb-4">
-          <img src={logo} alt="Scouts Adventures" class="w-10 h-10" />
-          <span class="text-white font-bold text-lg">Scouts Adventures</span>
+        <div class="flex items-center gap-2 mb-3">
+          <img src={logo} alt="Scouts Adventures" class="w-8 h-8" />
+          <span class="text-white font-bold">Scouts Adventures</span>
         </div>
         <p class="text-sm text-slate-400">
           Navigate your next outdoor adventure with confidence
         </p>
       </div>
       <div>
-        <h3 class="text-white font-semibold mb-4">Explore</h3>
-        <ul class="space-y-2 text-sm">
+        <h3 class="text-white font-semibold mb-3">Explore</h3>
+        <ul class="space-y-1.5 text-sm">
           <li>
             <a href="/hikes" class="hover:text-sky-400 transition-colors"
               >Hiking Trails</a
@@ -154,8 +154,8 @@
         </ul>
       </div>
       <div>
-        <h3 class="text-white font-semibold mb-4">Account</h3>
-        <ul class="space-y-2 text-sm">
+        <h3 class="text-white font-semibold mb-3">Account</h3>
+        <ul class="space-y-1.5 text-sm">
           {#if user}
             <li>
               <a href="/profile" class="hover:text-sky-400 transition-colors"
@@ -182,7 +182,7 @@
         </ul>
       </div>
     </div>
-    <div class="border-t border-slate-800 pt-8">
+    <div class="border-t border-slate-800 pt-6">
       <p class="text-center text-slate-400 text-sm">
         &copy; {new Date().getFullYear()} Scouts Adventures. All rights reserved.
       </p>

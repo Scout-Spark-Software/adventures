@@ -204,12 +204,12 @@
   <title>Submit Adventure - Scouts Adventures</title>
 </svelte:head>
 
-<div class="min-h-screen bg-gray-50 py-12">
+<div class="min-h-screen bg-gray-50 py-8">
   <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-    <h1 class="text-3xl font-bold text-gray-900 mb-8">Submit New Adventure</h1>
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">Submit New Adventure</h1>
 
-    <div class="bg-white shadow rounded-lg p-6">
-      <div class="mb-6">
+    <div class="bg-white shadow rounded-lg p-5">
+      <div class="mb-5">
         <label class="block text-sm font-medium text-gray-700 mb-2">Type</label>
         <select
           bind:value={type}

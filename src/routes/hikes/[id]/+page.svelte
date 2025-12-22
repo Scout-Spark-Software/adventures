@@ -16,7 +16,7 @@
 <div class="min-h-screen bg-gray-50">
   <!-- Hero Image Section -->
   <div
-    class="relative h-96 bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 overflow-hidden"
+    class="relative h-72 bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 overflow-hidden"
   >
     <!-- Decorative mountain/hill shapes -->
     <div class="absolute inset-0">
@@ -54,7 +54,7 @@
 
     <!-- Overlay Content -->
     <div
-      class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-end pb-12"
+      class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-end pb-8"
     >
       <div class="w-full">
         <div class="flex items-start justify-between mb-4">
@@ -78,7 +78,7 @@
               {/if}
             </div>
             <h1
-              class="text-4xl md:text-5xl font-bold text-white drop-shadow-lg mb-2"
+              class="text-3xl md:text-4xl font-bold text-white drop-shadow-lg mb-2"
             >
               {data.hike.name}
             </h1>
@@ -253,13 +253,13 @@
   </div>
 
   <!-- Main Content -->
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Main Column -->
-      <div class="lg:col-span-2 space-y-8">
+      <div class="lg:col-span-2 space-y-6">
         {#if data.hike.description}
-          <div class="bg-white shadow rounded-lg p-6">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">
+          <div class="bg-white shadow rounded-lg p-5">
+            <h2 class="text-xl font-bold text-gray-900 mb-3">
               About This Trail
             </h2>
             <div class="prose max-w-none">
@@ -271,8 +271,8 @@
         {/if}
 
         {#if data.hike.features && Array.isArray(data.hike.features) && data.hike.features.length > 0}
-          <div class="bg-white shadow rounded-lg p-6">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">Features</h2>
+          <div class="bg-white shadow rounded-lg p-5">
+            <h2 class="text-xl font-bold text-gray-900 mb-3">Features</h2>
             <div class="flex flex-wrap gap-2">
               {#each data.hike.features as feature}
                 <span
@@ -300,9 +300,9 @@
 
         <!-- Trail Conditions & Access -->
         {#if data.hike.dogFriendly || data.hike.waterSources || (data.hike.bestSeason && data.hike.bestSeason.length > 0) || data.hike.permitsRequired || data.hike.parkingInfo}
-          <div class="bg-white shadow rounded-lg p-6">
+          <div class="bg-white shadow rounded-lg p-5">
             <h2
-              class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2"
+              class="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2"
             >
               <svg
                 class="w-6 h-6 text-indigo-600"
@@ -434,8 +434,8 @@
         {/if}
 
         {#if data.files && data.files.length > 0}
-          <div class="bg-white shadow rounded-lg p-6">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">
+          <div class="bg-white shadow rounded-lg p-5">
+            <h2 class="text-xl font-bold text-gray-900 mb-3">
               Images & Documents
             </h2>
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -479,9 +479,9 @@
       <!-- Sidebar -->
       <div class="lg:col-span-1">
         {#if data.address}
-          <div class="bg-white shadow rounded-lg p-6 sticky top-6">
+          <div class="bg-white shadow rounded-lg p-5 sticky top-6">
             <h2
-              class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"
+              class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2"
             >
               <svg
                 class="w-5 h-5 text-indigo-600"

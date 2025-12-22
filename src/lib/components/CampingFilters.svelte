@@ -136,14 +136,14 @@
 
 <!-- Filter Sidebar/Drawer -->
 <div
-  class="bg-white rounded-lg shadow-md p-6 transition-transform duration-300 lg:sticky lg:top-6
+  class="bg-white rounded-lg shadow-md p-4 transition-transform duration-300 lg:sticky lg:top-6
   {isDrawerOpen
     ? 'fixed inset-y-0 left-0 z-50 w-80 overflow-y-auto'
     : 'hidden lg:block'}"
 >
   <!-- Mobile Close Button -->
-  <div class="lg:hidden flex items-center justify-between mb-4 pb-4 border-b">
-    <h2 class="text-lg font-bold text-gray-900">Filters</h2>
+  <div class="lg:hidden flex items-center justify-between mb-3 pb-3 border-b">
+    <h2 class="text-base font-bold text-gray-900">Filters</h2>
     <button
       class="p-2 hover:bg-gray-100 rounded-lg"
       on:click={() => (isDrawerOpen = false)}
@@ -166,13 +166,13 @@
     </button>
   </div>
 
-  <h2 class="text-lg font-bold text-gray-900 mb-4 hidden lg:block">
+  <h2 class="text-base font-bold text-gray-900 mb-3 hidden lg:block">
     Search & Filter
   </h2>
 
   <!-- Search Input -->
-  <div class="mb-4">
-    <label for="search" class="block text-sm font-medium text-gray-700 mb-2">
+  <div class="mb-3">
+    <label for="search" class="block text-sm font-medium text-gray-700 mb-1.5">
       Search
     </label>
     <input
@@ -185,8 +185,11 @@
   </div>
 
   <!-- Site Type Dropdown -->
-  <div class="mb-4">
-    <label for="siteType" class="block text-sm font-medium text-gray-700 mb-2">
+  <div class="mb-3">
+    <label
+      for="siteType"
+      class="block text-sm font-medium text-gray-700 mb-1.5"
+    >
       Site Type
     </label>
     <select
@@ -204,8 +207,11 @@
   </div>
 
   <!-- Pet Policy Dropdown -->
-  <div class="mb-4">
-    <label for="petPolicy" class="block text-sm font-medium text-gray-700 mb-2">
+  <div class="mb-3">
+    <label
+      for="petPolicy"
+      class="block text-sm font-medium text-gray-700 mb-1.5"
+    >
       Pet Policy
     </label>
     <select
@@ -221,10 +227,10 @@
   </div>
 
   <!-- Fire Policy Dropdown -->
-  <div class="mb-4">
+  <div class="mb-3">
     <label
       for="firePolicy"
-      class="block text-sm font-medium text-gray-700 mb-2"
+      class="block text-sm font-medium text-gray-700 mb-1.5"
     >
       Fire Policy
     </label>
@@ -242,8 +248,8 @@
   </div>
 
   <!-- Cost Range -->
-  <div class="mb-4">
-    <label class="block text-sm font-medium text-gray-700 mb-2">
+  <div class="mb-3">
+    <label class="block text-sm font-medium text-gray-700 mb-1.5">
       Cost Per Night ($)
     </label>
     <div class="flex gap-2">
@@ -267,9 +273,9 @@
   </div>
 
   <!-- Amenities Multi-Select -->
-  <div class="mb-4">
+  <div class="mb-3">
     <label
-      class="block text-sm font-medium text-gray-700 mb-2"
+      class="block text-sm font-medium text-gray-700 mb-1.5"
       id="amenities-label"
     >
       Amenities
@@ -297,9 +303,9 @@
   </div>
 
   <!-- Facilities Multi-Select -->
-  <div class="mb-4">
+  <div class="mb-3">
     <label
-      class="block text-sm font-medium text-gray-700 mb-2"
+      class="block text-sm font-medium text-gray-700 mb-1.5"
       id="facilities-label"
     >
       Facilities
@@ -327,7 +333,7 @@
   </div>
 
   <!-- Reservation Required Checkbox -->
-  <div class="mb-6">
+  <div class="mb-4">
     <label class="flex items-center gap-2 cursor-pointer">
       <input
         type="checkbox"

@@ -11,7 +11,7 @@
 >
   <!-- Image Placeholder -->
   <div
-    class="relative h-48 bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 overflow-hidden"
+    class="relative h-40 bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 overflow-hidden"
   >
     <!-- Decorative mountain/hill shapes -->
     <div class="absolute inset-0">
@@ -106,19 +106,19 @@
     </div>
   </div>
 
-  <div class="p-5">
-    <h3 class="text-xl font-bold text-gray-900 mb-2 line-clamp-1">
+  <div class="p-4">
+    <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-1">
       {hike.name}
     </h3>
 
     {#if hike.description}
-      <p class="text-gray-600 mb-4 line-clamp-2 text-sm leading-relaxed">
+      <p class="text-gray-600 mb-3 line-clamp-2 text-sm leading-relaxed">
         {hike.description}
       </p>
     {/if}
 
     {#if hike.location}
-      <div class="flex items-center text-sm text-gray-500 mb-3">
+      <div class="flex items-center text-sm text-gray-500 mb-2">
         <svg
           class="w-4 h-4 mr-1.5 flex-shrink-0"
           fill="none"
@@ -143,7 +143,7 @@
     {/if}
 
     <div
-      class="flex items-center justify-between pt-3 border-t border-gray-100"
+      class="flex items-center justify-between pt-2 border-t border-gray-100"
     >
       <span
         class="text-sm font-medium text-indigo-600 group-hover:text-indigo-700"

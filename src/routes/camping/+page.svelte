@@ -10,12 +10,12 @@
   <title>Camping Sites - Scouts Adventures</title>
 </svelte:head>
 
-<div class="min-h-screen bg-gray-50 py-12">
+<div class="min-h-screen bg-gray-50 py-8">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <h1 class="text-3xl font-bold text-gray-900 mb-8">All Camping Sites</h1>
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">All Camping Sites</h1>
 
     <!-- Two-column layout: filters sidebar + content -->
-    <div class="lg:grid lg:grid-cols-[320px_1fr] lg:gap-8">
+    <div class="lg:grid lg:grid-cols-[280px_1fr] lg:gap-6">
       <!-- Filter Sidebar (desktop) -->
       <aside class="hidden lg:block">
         <CampingFilters
@@ -29,7 +29,7 @@
       <main>
         <!-- Results count -->
         {#if data.campingSites && data.campingSites.length > 0}
-          <div class="mb-6 flex items-center justify-between">
+          <div class="mb-4 flex items-center justify-between">
             <p class="text-sm text-gray-600">
               <span class="font-semibold">{data.campingSites.length}</span>
               {data.campingSites.length === 1
@@ -39,7 +39,7 @@
           </div>
 
           <!-- Camping Sites Grid -->
-          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {#each data.campingSites as campingSite}
               <CampingSiteCard {campingSite} />
             {/each}

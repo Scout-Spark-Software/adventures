@@ -9,19 +9,19 @@
   <title>Admin Dashboard - Scouts Adventures</title>
 </svelte:head>
 
-<div class="min-h-screen bg-gray-50 py-12">
+<div class="min-h-screen bg-gray-50 py-8">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <h1 class="text-3xl font-bold text-gray-900 mb-8">Admin Dashboard</h1>
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">Admin Dashboard</h1>
 
     <!-- Statistics Grid -->
-    <div class="mb-8">
-      <h2 class="text-xl font-semibold text-gray-900 mb-4">Overview</h2>
-      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <div class="bg-white rounded-lg shadow p-6">
+    <div class="mb-6">
+      <h2 class="text-lg font-semibold text-gray-900 mb-3">Overview</h2>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="bg-white rounded-lg shadow p-5">
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm font-medium text-gray-600">Total Hikes</p>
-              <p class="text-3xl font-bold text-sky-600 mt-2">
+              <p class="text-2xl font-bold text-sky-600 mt-2">
                 {stats.totalHikes}
               </p>
             </div>
@@ -44,11 +44,11 @@
           </p>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="bg-white rounded-lg shadow p-5">
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm font-medium text-gray-600">Camping Sites</p>
-              <p class="text-3xl font-bold text-emerald-600 mt-2">
+              <p class="text-2xl font-bold text-emerald-600 mt-2">
                 {stats.totalCampingSites}
               </p>
             </div>
@@ -71,11 +71,11 @@
           </p>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="bg-white rounded-lg shadow p-5">
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm font-medium text-gray-600">Pending Reviews</p>
-              <p class="text-3xl font-bold text-amber-600 mt-2">
+              <p class="text-2xl font-bold text-amber-600 mt-2">
                 {stats.pendingHikes + stats.pendingCampingSites}
               </p>
             </div>
@@ -98,11 +98,11 @@
           </p>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="bg-white rounded-lg shadow p-5">
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm font-medium text-gray-600">Pending Edits</p>
-              <p class="text-3xl font-bold text-purple-600 mt-2">
+              <p class="text-2xl font-bold text-purple-600 mt-2">
                 {stats.pendingAlterations}
               </p>
             </div>
@@ -126,12 +126,12 @@
     </div>
 
     <!-- Additional Stats -->
-    <div class="mb-8">
-      <h2 class="text-xl font-semibold text-gray-900 mb-4">
+    <div class="mb-6">
+      <h2 class="text-lg font-semibold text-gray-900 mb-3">
         Community Engagement
       </h2>
-      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <div class="bg-white rounded-lg shadow p-6">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="bg-white rounded-lg shadow p-5">
           <div class="flex items-center">
             <svg
               class="w-10 h-10 text-rose-500"
@@ -155,16 +155,16 @@
 
     <!-- Admin Actions -->
     <div>
-      <h2 class="text-xl font-semibold text-gray-900 mb-4">Admin Actions</h2>
-      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <h2 class="text-lg font-semibold text-gray-900 mb-3">Admin Actions</h2>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <a
           href="/admin/moderation"
-          class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow border-l-4 border-amber-500"
+          class="bg-white rounded-lg shadow p-5 hover:shadow-lg transition-shadow border-l-4 border-amber-500"
         >
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">
             Moderation Queue
           </h3>
-          <p class="text-gray-600 mb-3">
+          <p class="text-sm text-gray-600 mb-2">
             Review and approve pending submissions
           </p>
           {#if stats.pendingHikes + stats.pendingCampingSites > 0}
@@ -178,12 +178,12 @@
 
         <a
           href="/admin/featured"
-          class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow border-l-4 border-sky-500"
+          class="bg-white rounded-lg shadow p-5 hover:shadow-lg transition-shadow border-l-4 border-sky-500"
         >
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">
             Featured Items
           </h3>
-          <p class="text-gray-600 mb-3">
+          <p class="text-sm text-gray-600 mb-2">
             Manage featured hikes and camping sites
           </p>
           <span
@@ -195,10 +195,10 @@
 
         <a
           href="/admin/types"
-          class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow border-l-4 border-purple-500"
+          class="bg-white rounded-lg shadow p-5 hover:shadow-lg transition-shadow border-l-4 border-purple-500"
         >
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">Manage Types</h3>
-          <p class="text-gray-600">
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Manage Types</h3>
+          <p class="text-sm text-gray-600">
             Configure features, amenities, and facilities
           </p>
         </a>

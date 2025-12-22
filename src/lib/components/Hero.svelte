@@ -67,8 +67,8 @@
     class="absolute inset-0 bg-gradient-to-r from-sky-900/20 to-transparent"
   ></div>
 
-  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32">
-    <div class="grid lg:grid-cols-2 gap-12 items-center">
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+    <div class="grid lg:grid-cols-2 gap-8 items-center">
       <!-- Left Column: Text Content -->
       <div class="text-center lg:text-left">
         <div
@@ -83,31 +83,31 @@
         </div>
 
         <h1
-          class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight mb-6"
+          class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight mb-4"
         >
           Your Compass to
           <span
-            class="block text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-blue-500 mt-2"
+            class="block text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-blue-500 mt-1"
           >
             Epic Adventures
           </span>
         </h1>
 
-        <p class="text-xl text-slate-300 mb-4 max-w-2xl lg:max-w-none">
+        <p class="text-lg text-slate-300 mb-3 max-w-2xl lg:max-w-none">
           Navigate extraordinary hiking trails and discover perfect camping
           sites
         </p>
-        <p class="text-base text-slate-400 mb-10 max-w-2xl lg:max-w-none">
+        <p class="text-sm text-slate-400 mb-6 max-w-2xl lg:max-w-none">
           Community-curated adventures from scouts who've been there
         </p>
 
         <!-- CTA Buttons -->
         <div
-          class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
+          class="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start"
         >
           <a
             href="/hikes"
-            class="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl hover:scale-105"
+            class="group inline-flex items-center justify-center gap-2 px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl hover:scale-105"
           >
             <svg
               class="w-5 h-5"
@@ -139,7 +139,7 @@
           </a>
           <a
             href="/submit"
-            class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm border-2 border-white/30 text-white font-semibold rounded-lg transition-all"
+            class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm border-2 border-white/30 text-white font-semibold rounded-lg transition-all"
           >
             <svg
               class="w-5 h-5"
@@ -159,18 +159,18 @@
         </div>
 
         <!-- Stats -->
-        <div class="grid grid-cols-3 gap-6 mt-12 pt-8 border-t border-slate-700">
+        <div class="grid grid-cols-3 gap-4 mt-8 pt-6 border-t border-slate-700">
           <div>
-            <div class="text-3xl font-bold text-sky-400">150+</div>
-            <div class="text-sm text-slate-400 mt-1">Trails</div>
+            <div class="text-2xl font-bold text-sky-400">150+</div>
+            <div class="text-xs text-slate-400 mt-1">Trails</div>
           </div>
           <div>
-            <div class="text-3xl font-bold text-sky-400">75+</div>
-            <div class="text-sm text-slate-400 mt-1">Campsites</div>
+            <div class="text-2xl font-bold text-sky-400">75+</div>
+            <div class="text-xs text-slate-400 mt-1">Campsites</div>
           </div>
           <div>
-            <div class="text-3xl font-bold text-sky-400">1000+</div>
-            <div class="text-sm text-slate-400 mt-1">Scouts</div>
+            <div class="text-2xl font-bold text-sky-400">1000+</div>
+            <div class="text-xs text-slate-400 mt-1">Scouts</div>
           </div>
         </div>
       </div>
@@ -178,7 +178,7 @@
       <!-- Right Column: Visual Element -->
       <div class="hidden lg:block relative">
         <!-- Floating Cards -->
-        <div class="relative h-[500px]">
+        <div class="relative h-[400px]">
           <!-- Card 1 -->
           <div
             class="absolute top-0 right-0 w-72 bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl p-6 shadow-2xl transform rotate-3 hover:rotate-0 transition-transform"
@@ -202,9 +202,7 @@
                 </svg>
               </div>
               <div>
-                <div class="text-white font-semibold">
-                  Mountain Peak Trail
-                </div>
+                <div class="text-white font-semibold">Mountain Peak Trail</div>
                 <div class="text-slate-400 text-sm">5.2 miles • Hard</div>
               </div>
             </div>
@@ -312,10 +310,7 @@
       class="w-full h-16 sm:h-20"
       preserveAspectRatio="none"
     >
-      <path
-        d="M0,0 L0,80 Q300,120 600,80 T1200,80 L1200,0 Z"
-        fill="#f8fafc"
-      />
+      <path d="M0,0 L0,80 Q300,120 600,80 T1200,80 L1200,0 Z" fill="#f8fafc" />
     </svg>
   </div>
 </div>
