@@ -1,24 +1,24 @@
-import { redirect } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
-import { stackAuth } from '$lib/server/auth';
+import { redirect } from "@sveltejs/kit";
+import type { RequestHandler } from "./$types";
+import { workosAuth } from "$lib/server/workos";
 
 export const POST: RequestHandler = async ({ cookies }) => {
-	// Get the access token
-	const accessToken = cookies.get('stack_access_token');
+  // Get the access token (optional for signOut)
+  const accessToken = cookies.get("workos_access_token");
 
-	if (accessToken) {
-		try {
-			// Sign out with Stack Auth
-			await stackAuth.signOut(accessToken);
-		} catch (error) {
-			console.error('Logout error:', error);
-		}
-	}
+  if (accessToken) {
+    try {
+      // Sign out with WorkOS (optional - session cleanup via cookies)
+      await workosAuth.signOut();
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  }
 
-	// Clear the session cookie
-	cookies.delete('stack_access_token', { path: '/' });
+  // Clear both session cookies
+  cookies.delete("workos_access_token", { path: "/" });
+  cookies.delete("workos_refresh_token", { path: "/" });
 
-	// Redirect to login page
-	throw redirect(303, '/login');
+  // Redirect to login page
+  throw redirect(303, "/login");
 };
-

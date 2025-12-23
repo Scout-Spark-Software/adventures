@@ -1,7 +1,7 @@
 import { fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 import { requireAuth } from "$lib/auth/middleware";
-import { stackAuth } from "$lib/server/auth";
+import { workosAuth } from "$lib/server/workos";
 
 export const load: PageServerLoad = async (event) => {
   const user = requireAuth(event);
@@ -11,10 +11,8 @@ export const load: PageServerLoad = async (event) => {
 };
 
 export const actions: Actions = {
-  changePassword: async ({ request, cookies }) => {
-    const accessToken = cookies.get("stack_access_token");
-
-    if (!accessToken) {
+  changePassword: async ({ request, locals }) => {
+    if (!locals.user) {
       return fail(401, { error: "Not authenticated" });
     }
 
@@ -53,7 +51,13 @@ export const actions: Actions = {
     }
 
     try {
-      await stackAuth.changePassword(accessToken, currentPassword, newPassword);
+      // Step 1: Verify current password by attempting sign in
+      // This is required because WorkOS updateUser doesn't verify the old password
+      await workosAuth.signIn(locals.user.email, currentPassword);
+
+      // Step 2: Update password
+      await workosAuth.updatePassword(locals.user.id, newPassword);
+
       return { success: true, message: "Password updated successfully" };
     } catch (error) {
       const errorMessage =
