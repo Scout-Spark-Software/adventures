@@ -1,4 +1,7 @@
 // See https://kit.svelte.dev/docs/types#app
+
+import type { isAdmin } from "$lib/auth";
+
 // for information about these types
 declare global {
   namespace App {
@@ -7,6 +10,7 @@ declare global {
         id: string;
         email: string;
         name?: string;
+        isAdmin?: boolean;
       } | null;
       userId: string | null;
     }

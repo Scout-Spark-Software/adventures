@@ -1,7 +1,6 @@
 import type { Handle } from "@sveltejs/kit";
 import { sequence } from "@sveltejs/kit/hooks";
 import { workosAuth } from "$lib/server/workos";
-import { getUserRole, setUserRole } from "$lib/auth";
 
 const authHandle: Handle = async ({ event, resolve }) => {
   // Get the access token from cookies
@@ -14,6 +13,9 @@ const authHandle: Handle = async ({ event, resolve }) => {
       let user = await workosAuth.verifySession(accessToken);
 
       if (user) {
+        // Get role from WorkOS
+        const userRole = user.role || "user";
+
         // Set user info in locals for use throughout the app
         event.locals.user = {
           id: user.id,
@@ -21,21 +23,9 @@ const authHandle: Handle = async ({ event, resolve }) => {
           name: user.firstName
             ? `${user.firstName} ${user.lastName || ""}`.trim()
             : user.email,
+          role: userRole,
         };
         event.locals.userId = user.id;
-
-        // Ensure user has a role in the database (auto-create if missing)
-        try {
-          const role = await getUserRole(user.id);
-          if (!role) {
-            // If no role exists, create default user role
-            await setUserRole(user.id, "user");
-          }
-        } catch (roleError) {
-          console.error("Error ensuring user role:", roleError);
-          // Don't fail the request if role creation fails - user can still use the app
-          // The role will be created on next successful call
-        }
       } else {
         // Invalid or expired session
         event.locals.user = null;
@@ -81,24 +71,19 @@ const authHandle: Handle = async ({ event, resolve }) => {
           // Verify new access token and set user
           const user = await workosAuth.verifySession(newAccessToken);
           if (user) {
+            // Get role from WorkOS
+            const userRole = user.role || "user";
+
             event.locals.user = {
               id: user.id,
               email: user.email,
               name: user.firstName
                 ? `${user.firstName} ${user.lastName || ""}`.trim()
                 : user.email,
+              isAdmin: userRole === "admin",
+              role: userRole,
             };
             event.locals.userId = user.id;
-
-            // Ensure user has a role in the database
-            try {
-              const role = await getUserRole(user.id);
-              if (!role) {
-                await setUserRole(user.id, "user");
-              }
-            } catch (roleError) {
-              console.error("Error ensuring user role:", roleError);
-            }
           } else {
             event.locals.user = null;
             event.locals.userId = null;
@@ -143,12 +128,17 @@ const authHandle: Handle = async ({ event, resolve }) => {
       // Verify new access token and set user
       const user = await workosAuth.verifySession(newAccessToken);
       if (user) {
+        // Get role from WorkOS
+        const userRole = user.role || "user";
+
         event.locals.user = {
           id: user.id,
           email: user.email,
           name: user.firstName
             ? `${user.firstName} ${user.lastName || ""}`.trim()
             : user.email,
+          isAdmin: userRole === "admin",
+          role: userRole,
         };
         event.locals.userId = user.id;
       } else {

@@ -82,7 +82,8 @@
 
             <div class="mt-8 pt-6 border-t border-gray-200">
               <button
-                onclick={handleLogout}
+                on:click={handleLogout}
+                type="button"
                 class="inline-flex items-center gap-2 px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-md text-white bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all"
               >
                 <svg

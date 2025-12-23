@@ -1,18 +1,32 @@
-import { db } from "../db";
-import { userRoles } from "../db/schemas";
-import { eq } from "drizzle-orm";
+import { workos, workosConfig } from "../server/workos";
 
 export type UserRole = "admin" | "moderator" | "user";
 
 export async function getUserRole(userId: string): Promise<UserRole> {
-  const role = await db.query.userRoles.findFirst({
-    where: eq(userRoles.userId, userId),
-  });
-  return (role?.role as UserRole) || "user";
+  try {
+    // Get role from organization membership for the specific organization
+    const memberships = await workos.userManagement.listOrganizationMemberships(
+      {
+        userId: userId,
+        organizationId: workosConfig.organizationId,
+      },
+    );
+    console.log("Memberships:", memberships?.data);
+    if (memberships.data.length > 0) {
+      const role = memberships.data[0].role?.slug || "user";
+      return role as UserRole;
+    }
+
+    return "user";
+  } catch (error) {
+    console.error("Error getting user role from WorkOS:", error);
+    return "user";
+  }
 }
 
 export async function isAdmin(userId: string): Promise<boolean> {
   const role = await getUserRole(userId);
+  console.log("Is Admin: ", role);
   return role === "admin";
 }
 
@@ -25,13 +39,9 @@ export async function setUserRole(
   userId: string,
   role: UserRole,
 ): Promise<void> {
-  try {
-    await db.insert(userRoles).values({ userId, role }).onConflictDoUpdate({
-      target: userRoles.userId,
-      set: { role },
-    });
-  } catch (error) {
-    console.error("Error setting user role:", error);
-    throw error;
-  }
+  // Note: Roles should be managed in WorkOS dashboard
+  // This function is deprecated and kept for backwards compatibility
+  console.warn(
+    "setUserRole is deprecated. Please manage user roles in the WorkOS dashboard.",
+  );
 }

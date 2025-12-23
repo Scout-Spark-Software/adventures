@@ -87,31 +87,31 @@ export const workosAuth = {
 
   // Verify session with access token
   async verifySession(accessToken: string) {
-    try {
-      // Create JWKS endpoint for WorkOS
-      const JWKS = createRemoteJWKSet(
-        new URL(`https://api.workos.com/sso/jwks/${workosConfig.clientId}`),
-      );
+    // Create JWKS endpoint for WorkOS
+    const JWKS = createRemoteJWKSet(
+      new URL(`https://api.workos.com/sso/jwks/${workosConfig.clientId}`),
+    );
 
-      // Verify the JWT
-      const { payload } = await jwtVerify(accessToken, JWKS, {
-        issuer: `https://api.workos.com/user_management/${workosConfig.clientId}`,
-      });
+    // Verify the JWT - let errors propagate for proper handling
+    const { payload } = await jwtVerify(accessToken, JWKS, {
+      issuer: `https://api.workos.com/user_management/${workosConfig.clientId}`,
+    });
 
-      // Extract user ID from the 'sub' claim
-      const userId = payload.sub;
+    // Extract user ID from the 'sub' claim
+    const userId = payload.sub;
 
-      if (!userId) {
-        return null;
-      }
-
-      // Fetch the full user details
-      const user = await workos.userManagement.getUser(userId);
-      return user;
-    } catch (error) {
-      console.error("Session verification failed:", error);
+    if (!userId) {
       return null;
     }
+
+    // Fetch the full user details
+    const user = await workos.userManagement.getUser(userId);
+
+    // Return user with role from JWT payload
+    return {
+      ...user,
+      role: (payload.role as string) || "user",
+    };
   },
 
   // Refresh session
