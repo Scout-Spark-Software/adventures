@@ -80,7 +80,6 @@ const authHandle: Handle = async ({ event, resolve }) => {
               name: user.firstName
                 ? `${user.firstName} ${user.lastName || ""}`.trim()
                 : user.email,
-              isAdmin: userRole === "admin",
               role: userRole,
             };
             event.locals.userId = user.id;
@@ -137,7 +136,6 @@ const authHandle: Handle = async ({ event, resolve }) => {
           name: user.firstName
             ? `${user.firstName} ${user.lastName || ""}`.trim()
             : user.email,
-          isAdmin: userRole === "admin",
           role: userRole,
         };
         event.locals.userId = user.id;

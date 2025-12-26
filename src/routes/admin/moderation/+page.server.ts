@@ -1,8 +1,10 @@
-import type { PageServerLoad } from './$types';
-import { requireModerator } from '$lib/auth/middleware';
+import type { PageServerLoad } from "./$types";
+import { requireModerator } from "$lib/auth/middleware";
 
-export const load: PageServerLoad = async ({ fetch }) => {
-	const queue = await fetch('/api/moderation?status=pending').then((r) => r.json());
-	return { queue: queue || [] };
+export const load: PageServerLoad = async (event) => {
+  requireModerator(event);
+  const queue = await event
+    .fetch("/api/moderation?status=pending")
+    .then((r) => r.json());
+  return { queue: queue || [] };
 };
-

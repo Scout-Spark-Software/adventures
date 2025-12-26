@@ -3,7 +3,7 @@ import type { RequestHandler } from "./$types";
 import { db } from "$lib/db";
 import { alterations, hikes, campingSites } from "$lib/db/schemas";
 import { eq } from "drizzle-orm";
-import { requireModerator } from "$lib/auth/middleware";
+import { requireAuth, requireModerator } from "$lib/auth/middleware";
 import { updateModerationStatus } from "$lib/moderation";
 
 export const GET: RequestHandler = async ({ params }) => {
@@ -18,10 +18,10 @@ export const GET: RequestHandler = async ({ params }) => {
   return json(alteration);
 };
 
-export const PUT: RequestHandler = async ({ params, request, locals }) => {
-  const user = await requireModerator({ locals } as any);
+export const PUT: RequestHandler = async (event) => {
+  const user = requireModerator(event);
 
-  const body = await request.json();
+  const body = await event.request.json();
   const { status, apply } = body;
 
   if (!status || !["approved", "rejected"].includes(status)) {
@@ -29,7 +29,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
   }
 
   const alteration = await db.query.alterations.findFirst({
-    where: eq(alterations.id, params.id),
+    where: eq(alterations.id, event.params.id),
   });
 
   if (!alteration) {
@@ -47,7 +47,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
       reviewedBy: user.id,
       reviewedAt: new Date(),
     })
-    .where(eq(alterations.id, params.id))
+    .where(eq(alterations.id, event.params.id))
     .returning();
 
   // If approved and apply is true, apply the alteration to the entity
@@ -74,11 +74,11 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
   return json(updatedAlteration);
 };
 
-export const DELETE: RequestHandler = async ({ params, locals }) => {
-  const user = requireAuth({ locals } as any);
+export const DELETE: RequestHandler = async (event) => {
+  const user = requireAuth(event);
 
   const alteration = await db.query.alterations.findFirst({
-    where: eq(alterations.id, params.id),
+    where: eq(alterations.id, event.params.id),
   });
 
   if (!alteration) {
@@ -86,15 +86,11 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
   }
 
   // Only creator or admin can delete
-  if (alteration.submittedBy !== user.id) {
-    const { isAdmin } = await import("$lib/auth");
-    const isUserAdmin = await isAdmin(user.id);
-    if (!isUserAdmin) {
-      throw error(403, "Not authorized to delete this alteration");
-    }
+  if (alteration.submittedBy !== user.id && user.role !== "admin") {
+    throw error(403, "Not authorized to delete this alteration");
   }
 
-  await db.delete(alterations).where(eq(alterations.id, params.id));
+  await db.delete(alterations).where(eq(alterations.id, event.params.id));
 
   return json({ success: true });
 };

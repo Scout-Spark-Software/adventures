@@ -6,7 +6,7 @@
     id: string;
     email: string;
     name?: string;
-    isAdmin?: boolean;
+    role: "admin" | "moderator" | "user";
   } | null;
   $: currentPath = $page.url.pathname;
 </script>
@@ -79,7 +79,7 @@
       </div>
       <div class="flex items-center gap-2">
         {#if user}
-          {#if user.isAdmin}
+          {#if user.role === "admin"}
             <a
               href="/admin"
               class="text-sky-700 hover:text-sky-800 px-3 py-2 rounded-md text-sm font-semibold transition-colors"

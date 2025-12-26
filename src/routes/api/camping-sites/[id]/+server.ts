@@ -22,11 +22,11 @@ export const GET: RequestHandler = async ({ params, locals }) => {
   return json(campingSite);
 };
 
-export const PUT: RequestHandler = async ({ params, request, locals }) => {
-  const user = requireAuth({ locals } as any);
+export const PUT: RequestHandler = async (event) => {
+  const user = requireAuth(event);
 
   const campingSite = await db.query.campingSites.findFirst({
-    where: eq(campingSites.id, params.id),
+    where: eq(campingSites.id, event.params.id),
   });
 
   if (!campingSite) {
@@ -34,15 +34,11 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
   }
 
   // Only creator or admin can edit
-  if (campingSite.createdBy !== user.id) {
-    const { isAdmin } = await import("$lib/auth");
-    const isUserAdmin = await isAdmin(user.id);
-    if (!isUserAdmin) {
-      throw error(403, "Not authorized to edit this camping site");
-    }
+  if (campingSite.createdBy !== user.id && user.role !== "admin") {
+    throw error(403, "Not authorized to edit this camping site");
   }
 
-  const body = await request.json();
+  const body = await event.request.json();
 
   // Support partial updates - only update fields that are provided
   const updateData: any = {
@@ -76,17 +72,17 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
   const [updatedCampingSite] = await db
     .update(campingSites)
     .set(updateData)
-    .where(eq(campingSites.id, params.id))
+    .where(eq(campingSites.id, event.params.id))
     .returning();
 
   return json(updatedCampingSite);
 };
 
-export const DELETE: RequestHandler = async ({ params, locals }) => {
-  const user = requireAuth({ locals } as any);
+export const DELETE: RequestHandler = async (event) => {
+  const user = requireAuth(event);
 
   const campingSite = await db.query.campingSites.findFirst({
-    where: eq(campingSites.id, params.id),
+    where: eq(campingSites.id, event.params.id),
   });
 
   if (!campingSite) {
@@ -94,15 +90,11 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
   }
 
   // Only creator or admin can delete
-  if (campingSite.createdBy !== user.id) {
-    const { isAdmin } = await import("$lib/auth");
-    const isUserAdmin = await isAdmin(user.id);
-    if (!isUserAdmin) {
-      throw error(403, "Not authorized to delete this camping site");
-    }
+  if (campingSite.createdBy !== user.id && user.role !== "admin") {
+    throw error(403, "Not authorized to delete this camping site");
   }
 
-  await db.delete(campingSites).where(eq(campingSites.id, params.id));
+  await db.delete(campingSites).where(eq(campingSites.id, event.params.id));
 
   return json({ success: true });
 };

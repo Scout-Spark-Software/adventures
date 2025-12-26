@@ -4,15 +4,12 @@ import { db } from "$lib/db";
 import { campingSites, addresses } from "$lib/db/schemas";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "$lib/auth/middleware";
-import { getUserRole } from "$lib/auth";
 
-export const load: PageServerLoad = async ({ params, locals }) => {
-  if (!locals.userId) {
-    throw redirect(302, `/camping/${params.id}`);
-  }
+export const load: PageServerLoad = async (event) => {
+  const user = requireAuth(event);
 
   const campingSite = await db.query.campingSites.findFirst({
-    where: eq(campingSites.id, params.id),
+    where: eq(campingSites.id, event.params.id),
   });
 
   if (!campingSite) {
@@ -27,26 +24,23 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     });
   }
 
-  const userRole = await getUserRole(locals.userId);
-
   return {
     campingSite,
     address,
-    userRole,
+    userRole: user.role,
   };
 };
 
 export const actions: Actions = {
-  updateField: async ({ request, params, locals, fetch }) => {
-    const user = requireAuth({ locals } as any);
-    const formData = await request.formData();
+  updateField: async (event) => {
+    const user = requireAuth(event);
+    const formData = await event.request.formData();
 
     const fieldName = formData.get("fieldName") as string;
     const newValue = formData.get("newValue") as string;
     const reason = formData.get("reason") as string;
 
-    const userRole = await getUserRole(user.id);
-    const isAdmin = userRole === "admin";
+    const isAdmin = user.role === "admin";
 
     // Handle location updates
     if (fieldName === "location") {
@@ -63,7 +57,7 @@ export const actions: Actions = {
       }
 
       const campingSite = await db.query.campingSites.findFirst({
-        where: eq(campingSites.id, params.id),
+        where: eq(campingSites.id, event.params.id),
       });
 
       if (!campingSite) {
@@ -107,7 +101,7 @@ export const actions: Actions = {
           await db
             .update(campingSites)
             .set({ addressId: newAddress.id })
-            .where(eq(campingSites.id, params.id));
+            .where(eq(campingSites.id, event.params.id));
         }
 
         return { success: true, message: "Location updated successfully!" };
@@ -129,11 +123,11 @@ export const actions: Actions = {
             })
           : null;
 
-        const response = await fetch("/api/alterations", {
+        const response = await event.fetch("/api/alterations", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            campingSiteId: params.id,
+            campingSiteId: event.params.id,
             fieldName: "location",
             oldValue: oldAddress
               ? JSON.stringify({
@@ -169,13 +163,16 @@ export const actions: Actions = {
 
     if (isAdmin) {
       // Admin can edit directly
-      const response = await fetch(`/api/camping-sites/${params.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          [fieldName]: newValue,
-        }),
-      });
+      const response = await event.fetch(
+        `/api/camping-sites/${event.params.id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            [fieldName]: newValue,
+          }),
+        },
+      );
 
       if (!response.ok) {
         return { success: false, error: "Failed to update camping site" };
@@ -185,18 +182,18 @@ export const actions: Actions = {
     } else {
       // Regular user submits alteration
       const campingSite = await db.query.campingSites.findFirst({
-        where: eq(campingSites.id, params.id),
+        where: eq(campingSites.id, event.params.id),
       });
 
       if (!campingSite) {
         return { success: false, error: "Camping site not found" };
       }
 
-      const response = await fetch("/api/alterations", {
+      const response = await event.fetch("/api/alterations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          campingSiteId: params.id,
+          campingSiteId: event.params.id,
           fieldName,
           oldValue: String((campingSite as any)[fieldName] || ""),
           newValue,

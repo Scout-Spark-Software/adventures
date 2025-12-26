@@ -25,6 +25,13 @@
   // Mobile drawer state
   let isDrawerOpen = false;
   let isApplyingFilters = false;
+  let searchTimeout: ReturnType<typeof setTimeout>;
+  let isInitialized = false;
+
+  // Initialize flag after first render to prevent auto-submit on mount
+  $: if (typeof window !== "undefined" && !isInitialized) {
+    isInitialized = true;
+  }
 
   function toggleAmenity(amenityId: string) {
     if (selectedAmenities.includes(amenityId)) {
@@ -32,6 +39,7 @@
     } else {
       selectedAmenities = [...selectedAmenities, amenityId];
     }
+    if (isInitialized) applyFilters();
   }
 
   function toggleFacility(facilityId: string) {
@@ -40,6 +48,22 @@
     } else {
       selectedFacilities = [...selectedFacilities, facilityId];
     }
+    if (isInitialized) applyFilters();
+  }
+
+  // Handle search input with debounce
+  function handleSearchInput() {
+    if (!isInitialized) return;
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      applyFilters();
+    }, 500);
+  }
+
+  // Handle immediate filter changes
+  function handleFilterChange() {
+    if (!isInitialized) return;
+    applyFilters();
   }
 
   async function applyFilters() {
@@ -59,7 +83,10 @@
     if (reservationRequired) params.set("reservationRequired", "true");
 
     const queryString = params.toString();
-    await goto(`/camping${queryString ? "?" + queryString : ""}`);
+    await goto(`/camping${queryString ? "?" + queryString : ""}`, {
+      noScroll: true,
+      keepFocus: true,
+    });
     isDrawerOpen = false;
     isApplyingFilters = false;
   }
@@ -179,6 +206,7 @@
       id="search"
       type="text"
       bind:value={search}
+      on:input={handleSearchInput}
       placeholder="Name, description, location..."
       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
     />
@@ -195,6 +223,7 @@
     <select
       id="siteType"
       bind:value={siteType}
+      on:change={handleFilterChange}
       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
     >
       <option value="">All Types</option>
@@ -217,6 +246,7 @@
     <select
       id="petPolicy"
       bind:value={petPolicy}
+      on:change={handleFilterChange}
       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
     >
       <option value="">All Policies</option>
@@ -237,6 +267,7 @@
     <select
       id="firePolicy"
       bind:value={firePolicy}
+      on:change={handleFilterChange}
       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
     >
       <option value="">All Policies</option>
@@ -256,6 +287,7 @@
       <input
         type="number"
         bind:value={minCost}
+        on:input={handleSearchInput}
         placeholder="Min"
         min="0"
         step="1"
@@ -264,6 +296,7 @@
       <input
         type="number"
         bind:value={maxCost}
+        on:input={handleSearchInput}
         placeholder="Max"
         min="0"
         step="1"
@@ -338,6 +371,7 @@
       <input
         type="checkbox"
         bind:checked={reservationRequired}
+        on:change={handleFilterChange}
         class="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
       />
       <span class="text-sm font-medium text-gray-700">Reservation Required</span
@@ -349,43 +383,9 @@
   <div class="flex gap-3">
     <button
       type="button"
-      on:click={applyFilters}
-      disabled={isApplyingFilters}
-      class="flex-1 bg-emerald-600 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-      aria-label="Apply selected filters"
-    >
-      {#if isApplyingFilters}
-        <svg
-          class="animate-spin h-4 w-4"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <circle
-            class="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            stroke-width="4"
-          ></circle>
-          <path
-            class="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          ></path>
-        </svg>
-        Applying...
-      {:else}
-        Apply Filters
-      {/if}
-    </button>
-    <button
-      type="button"
       on:click={clearFilters}
       disabled={isApplyingFilters}
-      class="px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      class="w-full px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       aria-label="Clear all filters"
     >
       Clear All
