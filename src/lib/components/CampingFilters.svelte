@@ -280,11 +280,12 @@
 
   <!-- Cost Range -->
   <div class="mb-3">
-    <label class="block text-sm font-medium text-gray-700 mb-1.5">
+    <label for="minCost" class="block text-sm font-medium text-gray-700 mb-1.5">
       Cost Per Night ($)
     </label>
     <div class="flex gap-2">
       <input
+        id="minCost"
         type="number"
         bind:value={minCost}
         on:input={handleSearchInput}
@@ -292,8 +293,10 @@
         min="0"
         step="1"
         class="w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+        aria-label="Minimum cost per night"
       />
       <input
+        id="maxCost"
         type="number"
         bind:value={maxCost}
         on:input={handleSearchInput}
@@ -301,18 +304,19 @@
         min="0"
         step="1"
         class="w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+        aria-label="Maximum cost per night"
       />
     </div>
   </div>
 
   <!-- Amenities Multi-Select -->
   <div class="mb-3">
-    <label
+    <div
       class="block text-sm font-medium text-gray-700 mb-1.5"
       id="amenities-label"
     >
       Amenities
-    </label>
+    </div>
     <div
       class="flex flex-wrap gap-2"
       role="group"
@@ -337,12 +341,12 @@
 
   <!-- Facilities Multi-Select -->
   <div class="mb-3">
-    <label
+    <div
       class="block text-sm font-medium text-gray-700 mb-1.5"
       id="facilities-label"
     >
       Facilities
-    </label>
+    </div>
     <div
       class="flex flex-wrap gap-2"
       role="group"

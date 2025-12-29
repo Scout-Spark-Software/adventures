@@ -128,6 +128,37 @@
     class="absolute inset-0 bg-gradient-to-r from-sky-900/20 to-transparent"
   ></div>
 
+  <!-- Mountain Range Background - Full Width -->
+  <div class="absolute bottom-0 left-0 right-0 h-48 opacity-10">
+    <svg
+      class="w-full h-full"
+      viewBox="0 0 1200 200"
+      preserveAspectRatio="none"
+    >
+      <!-- Back mountain layer -->
+      <path
+        d="M0,200 L0,140 L150,80 L300,110 L500,50 L700,90 L900,60 L1050,100 L1200,80 L1200,200 Z"
+        fill="currentColor"
+        class="text-slate-600"
+        opacity="0.4"
+      />
+      <!-- Middle mountain layer -->
+      <path
+        d="M0,200 L0,150 L200,90 L400,120 L650,60 L850,100 L1050,70 L1200,130 L1200,200 Z"
+        fill="currentColor"
+        class="text-slate-500"
+        opacity="0.6"
+      />
+      <!-- Front mountain layer -->
+      <path
+        d="M0,200 L0,160 L180,110 L350,140 L600,80 L800,130 L1000,100 L1200,150 L1200,200 Z"
+        fill="currentColor"
+        class="text-sky-600"
+        opacity="0.8"
+      />
+    </svg>
+  </div>
+
   <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
     <div class="grid lg:grid-cols-2 gap-8 items-center">
       <!-- Left Column: Text Content -->
@@ -199,11 +230,34 @@
             </svg>
           </a>
           <a
-            href="/submit"
+            href="/essentials"
             class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm border-2 border-white/30 text-white font-semibold rounded-lg transition-all"
           >
             <svg
               class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+              />
+            </svg>
+            Scout Essentials
+          </a>
+        </div>
+
+        <!-- Secondary CTA -->
+        <div class="mt-4">
+          <a
+            href="/submit"
+            class="inline-flex items-center gap-2 text-sky-300 hover:text-sky-200 text-sm font-medium transition-colors"
+          >
+            <svg
+              class="w-4 h-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -330,52 +384,6 @@
             <div class="text-slate-300 text-sm">
               Perfect basecamp with lake access
             </div>
-          </div>
-
-          <!-- Compass Decoration -->
-          <div
-            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 opacity-20"
-          >
-            <svg class="w-full h-full animate-spin-slow" viewBox="0 0 100 100">
-              <circle
-                cx="50"
-                cy="50"
-                r="45"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="0.5"
-                class="text-sky-400"
-              />
-              <circle
-                cx="50"
-                cy="50"
-                r="35"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="0.5"
-                class="text-sky-400"
-              />
-              <path
-                d="M50 5 L55 48 L50 50 L45 48 Z"
-                fill="currentColor"
-                class="text-sky-400"
-              />
-              <path
-                d="M50 95 L55 52 L50 50 L45 52 Z"
-                fill="currentColor"
-                class="text-sky-400"
-              />
-              <path
-                d="M5 50 L48 45 L50 50 L48 55 Z"
-                fill="currentColor"
-                class="text-sky-400"
-              />
-              <path
-                d="M95 50 L52 45 L50 50 L52 55 Z"
-                fill="currentColor"
-                class="text-sky-400"
-              />
-            </svg>
           </div>
         </div>
       </div>

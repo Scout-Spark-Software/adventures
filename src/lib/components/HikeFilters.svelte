@@ -208,37 +208,44 @@
 
   <!-- Distance Range -->
   <div class="mb-3">
-    <label class="block text-sm font-medium text-gray-700 mb-1.5">
+    <label
+      for="minDistance"
+      class="block text-sm font-medium text-gray-700 mb-1.5"
+    >
       Distance (miles)
     </label>
     <div class="flex gap-2">
       <input
+        id="minDistance"
         type="number"
         bind:value={minDistance}
         placeholder="Min"
         min="0"
         step="0.1"
         class="w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+        aria-label="Minimum distance in miles"
       />
       <input
+        id="maxDistance"
         type="number"
         bind:value={maxDistance}
         placeholder="Max"
         min="0"
         step="0.1"
         class="w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+        aria-label="Maximum distance in miles"
       />
     </div>
   </div>
 
   <!-- Trail Features Multi-Select -->
   <div class="mb-4">
-    <label
+    <div
       class="block text-sm font-medium text-gray-700 mb-2"
       id="trail-features-label"
     >
       Trail Features
-    </label>
+    </div>
     <div
       class="flex flex-wrap gap-2"
       role="group"

@@ -9,7 +9,6 @@
   import MultiStepForm from "$lib/components/MultiStepForm.svelte";
 
   export let data: PageData;
-  export let form: ActionData;
 
   let type: "hike" | "camping_site" = "hike";
   let loading = false;
@@ -210,8 +209,12 @@
 
     <div class="bg-white shadow rounded-lg p-5">
       <div class="mb-5">
-        <label class="block text-sm font-medium text-gray-700 mb-2">Type</label>
+        <label
+          for="submission-type"
+          class="block text-sm font-medium text-gray-700 mb-2">Type</label
+        >
         <select
+          id="submission-type"
           bind:value={type}
           on:change={() => (currentStep = 0)}
           class="block w-full rounded-md border-gray-300 shadow-sm"
@@ -523,15 +526,20 @@
                     </div>
 
                     <div>
-                      <label
+                      <div
                         class="block text-sm font-medium text-gray-700 mb-2"
+                        id="best-season-label"
                       >
                         Best Season to Visit
                         <Tooltip
                           text="Select all seasons when this trail is enjoyable"
                         />
-                      </label>
-                      <div class="grid grid-cols-2 gap-3">
+                      </div>
+                      <div
+                        class="grid grid-cols-2 gap-3"
+                        role="group"
+                        aria-labelledby="best-season-label"
+                      >
                         {#each ["Spring", "Summer", "Fall", "Winter"] as season}
                           <label class="flex items-center">
                             <input
@@ -977,13 +985,18 @@
                     </label>
 
                     <div>
-                      <label
+                      <div
                         class="block text-sm font-medium text-gray-700 mb-2"
+                        id="operating-season-label"
                       >
                         Operating Season
                         <Tooltip text="Dates when the campground is open" />
-                      </label>
-                      <div class="grid grid-cols-2 gap-4">
+                      </div>
+                      <div
+                        class="grid grid-cols-2 gap-4"
+                        role="group"
+                        aria-labelledby="operating-season-label"
+                      >
                         <div>
                           <label
                             for="season_start"
