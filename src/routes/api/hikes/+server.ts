@@ -1,7 +1,7 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { db } from "$lib/db";
-import { hikes, addresses } from "$lib/db/schemas";
+import { hikes, addresses, ratingAggregates } from "$lib/db/schemas";
 import { eq, and, or, desc, ilike, gte, lte, sql } from "drizzle-orm";
 import { requireAuth } from "$lib/auth/middleware";
 import { addToModerationQueue } from "$lib/moderation";
@@ -18,6 +18,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
   const trailType = url.searchParams.get("trailType");
   const minDistance = url.searchParams.get("minDistance");
   const maxDistance = url.searchParams.get("maxDistance");
+  const minRating = url.searchParams.get("minRating");
   const featuresParam = url.searchParams.get("features");
   const dogFriendly = url.searchParams.get("dogFriendly");
 
@@ -73,11 +74,12 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     }
   }
 
-  // Build query with optional address join for search
-  let query;
-  if (search) {
-    // Join with addresses for location search
-    query = db
+  // Build query with optional joins for search and rating filter
+  const needsJoin = search || minRating;
+
+  if (needsJoin) {
+    // Join with addresses for location search and/or rating_aggregates for rating filter
+    let query = db
       .select({
         id: hikes.id,
         name: hikes.name,
@@ -103,19 +105,42 @@ export const GET: RequestHandler = async ({ url, locals }) => {
         createdAt: hikes.createdAt,
         updatedAt: hikes.updatedAt,
       })
-      .from(hikes)
-      .leftJoin(addresses, eq(hikes.addressId, addresses.id))
-      .where(
-        and(
-          ...conditions,
-          or(
-            ilike(hikes.name, `%${search}%`),
-            ilike(hikes.description, `%${search}%`),
-            ilike(addresses.city, `%${search}%`),
-            ilike(addresses.state, `%${search}%`),
-          ),
+      .from(hikes);
+
+    // Add address join if searching
+    if (search) {
+      query = query.leftJoin(addresses, eq(hikes.addressId, addresses.id));
+    }
+
+    // Add rating join if filtering by rating
+    if (minRating) {
+      query = query.leftJoin(
+        ratingAggregates,
+        eq(hikes.id, ratingAggregates.hikeId),
+      );
+    }
+
+    // Build where conditions
+    const whereConditions = [...conditions];
+
+    if (search) {
+      whereConditions.push(
+        or(
+          ilike(hikes.name, `%${search}%`),
+          ilike(hikes.description, `%${search}%`),
+          ilike(addresses.city, `%${search}%`),
+          ilike(addresses.state, `%${search}%`),
         ),
-      )
+      );
+    }
+
+    if (minRating) {
+      whereConditions.push(sql`${ratingAggregates.averageRating} IS NOT NULL`);
+      whereConditions.push(gte(ratingAggregates.averageRating, minRating));
+    }
+
+    query = query
+      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
       .limit(limit)
       .offset(offset)
       .orderBy(desc(hikes.createdAt));

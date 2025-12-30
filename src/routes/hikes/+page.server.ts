@@ -12,6 +12,7 @@ export const load: PageServerLoad = async ({ fetch, url }) => {
     "trailType",
     "minDistance",
     "maxDistance",
+    "minRating",
     "features",
     "dogFriendly",
   ];

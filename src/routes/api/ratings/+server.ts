@@ -38,7 +38,8 @@ export const GET: RequestHandler = async ({ url }) => {
     aggregateConditions.push(eq(ratingAggregates.campingSiteId, campingSiteId));
 
   const aggregate = await db.query.ratingAggregates.findFirst({
-    where: aggregateConditions.length > 0 ? and(...aggregateConditions) : undefined,
+    where:
+      aggregateConditions.length > 0 ? and(...aggregateConditions) : undefined,
   });
 
   return json({
@@ -73,7 +74,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
   // Validate rating value (1.0, 1.5, 2.0, ..., 5.0)
   if (rating < 1.0 || rating > 5.0 || (rating * 2) % 1 !== 0) {
-    throw error(400, "Rating must be between 1.0 and 5.0 in half-star increments");
+    throw error(
+      400,
+      "Rating must be between 1.0 and 5.0 in half-star increments",
+    );
   }
 
   // Sanitize review text
@@ -91,7 +95,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   // Check if rating already exists
   const existingConditions = [eq(ratings.userId, user.id)];
   if (hikeId) existingConditions.push(eq(ratings.hikeId, hikeId));
-  if (campingSiteId) existingConditions.push(eq(ratings.campingSiteId, campingSiteId));
+  if (campingSiteId)
+    existingConditions.push(eq(ratings.campingSiteId, campingSiteId));
 
   const existing = await db.query.ratings.findFirst({
     where: and(...existingConditions),
@@ -132,10 +137,44 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   return json(result, { status: existing ? 200 : 201 });
 };
 
+// DELETE /api/ratings?hike_id=xxx or ?camping_site_id=xxx
+// Deletes the user's rating for an entity
+export const DELETE: RequestHandler = async ({ url, locals }) => {
+  const user = requireAuth({ locals } as any);
+
+  const hikeId = url.searchParams.get("hike_id");
+  const campingSiteId = url.searchParams.get("camping_site_id");
+
+  if (!hikeId && !campingSiteId) {
+    throw error(400, "Either hike_id or camping_site_id is required");
+  }
+
+  // Find the rating to delete
+  const conditions = [eq(ratings.userId, user.id)];
+  if (hikeId) conditions.push(eq(ratings.hikeId, hikeId));
+  if (campingSiteId) conditions.push(eq(ratings.campingSiteId, campingSiteId));
+
+  const existing = await db.query.ratings.findFirst({
+    where: and(...conditions),
+  });
+
+  if (!existing) {
+    throw error(404, "Rating not found");
+  }
+
+  // Delete the rating
+  await db.delete(ratings).where(eq(ratings.id, existing.id));
+
+  // Update aggregates
+  await updateRatingAggregates(hikeId, campingSiteId);
+
+  return json({ success: true });
+};
+
 // Helper function to update aggregates
 async function updateRatingAggregates(
   hikeId: string | null,
-  campingSiteId: string | null
+  campingSiteId: string | null,
 ) {
   const conditions = [];
   if (hikeId) conditions.push(eq(ratings.hikeId, hikeId));
@@ -158,7 +197,8 @@ async function updateRatingAggregates(
     aggregateConditions.push(eq(ratingAggregates.campingSiteId, campingSiteId));
 
   const existingAggregate = await db.query.ratingAggregates.findFirst({
-    where: aggregateConditions.length > 0 ? and(...aggregateConditions) : undefined,
+    where:
+      aggregateConditions.length > 0 ? and(...aggregateConditions) : undefined,
   });
 
   if (existingAggregate) {

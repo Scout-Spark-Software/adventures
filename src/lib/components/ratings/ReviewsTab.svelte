@@ -35,7 +35,13 @@
 
       const data = await response.json();
       reviews = data.ratings;
-      aggregate = data.aggregate;
+      aggregate = {
+        averageRating: data.aggregate.averageRating
+          ? parseFloat(data.aggregate.averageRating)
+          : null,
+        totalRatings: data.aggregate.totalRatings,
+        totalReviews: data.aggregate.totalReviews,
+      };
     } catch (e) {
       error = e instanceof Error ? e.message : "Failed to load reviews";
     } finally {
@@ -67,6 +73,11 @@
     loadUserRating();
   }
 
+  function handleRatingDeleted() {
+    loadReviews();
+    loadUserRating();
+  }
+
   function formatDate(dateString: string) {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -93,11 +104,11 @@
         <h3 class="text-lg font-semibold text-gray-900 mb-3">Overall Rating</h3>
         <div class="flex items-center gap-4">
           <div class="text-5xl font-bold text-gray-900">
-            {parseFloat(aggregate.averageRating).toFixed(1)}
+            {aggregate.averageRating.toFixed(1)}
           </div>
           <div>
             <RatingDisplay
-              rating={parseFloat(aggregate.averageRating)}
+              rating={aggregate.averageRating}
               totalRatings={aggregate.totalRatings}
               size="lg"
               showCount={false}
@@ -124,6 +135,7 @@
         initialRating={userRating?.rating ? parseFloat(userRating.rating) : 0}
         initialReview={userRating?.reviewText || ""}
         on:saved={handleRatingSaved}
+        on:deleted={handleRatingDeleted}
       />
     {:else}
       <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">

@@ -14,6 +14,7 @@
   let firePolicy = currentFilters.firePolicy || "";
   let minCost = currentFilters.minCost || "";
   let maxCost = currentFilters.maxCost || "";
+  let minRating = currentFilters.minRating || "";
   let selectedAmenities: string[] = currentFilters.amenities
     ? currentFilters.amenities.split(",")
     : [];
@@ -76,6 +77,7 @@
     if (firePolicy) params.set("firePolicy", firePolicy);
     if (minCost) params.set("minCost", minCost);
     if (maxCost) params.set("maxCost", maxCost);
+    if (minRating) params.set("minRating", minRating);
     if (selectedAmenities.length > 0)
       params.set("amenities", selectedAmenities.join(","));
     if (selectedFacilities.length > 0)
@@ -98,6 +100,7 @@
     firePolicy = "";
     minCost = "";
     maxCost = "";
+    minRating = "";
     selectedAmenities = [];
     selectedFacilities = [];
     reservationRequired = false;
@@ -112,6 +115,7 @@
     (petPolicy ? 1 : 0) +
     (firePolicy ? 1 : 0) +
     (minCost || maxCost ? 1 : 0) +
+    (minRating ? 1 : 0) +
     selectedAmenities.length +
     selectedFacilities.length +
     (reservationRequired ? 1 : 0);
@@ -307,6 +311,29 @@
         aria-label="Maximum cost per night"
       />
     </div>
+  </div>
+
+  <!-- Minimum Rating -->
+  <div class="mb-3">
+    <label
+      for="minRating"
+      class="block text-sm font-medium text-gray-700 mb-1.5"
+    >
+      Minimum Rating
+    </label>
+    <select
+      id="minRating"
+      bind:value={minRating}
+      on:change={handleFilterChange}
+      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+    >
+      <option value="">Any Rating</option>
+      <option value="1">⭐ 1+ Stars</option>
+      <option value="2">⭐⭐ 2+ Stars</option>
+      <option value="3">⭐⭐⭐ 3+ Stars</option>
+      <option value="4">⭐⭐⭐⭐ 4+ Stars</option>
+      <option value="5">⭐⭐⭐⭐⭐ 5 Stars</option>
+    </select>
   </div>
 
   <!-- Amenities Multi-Select -->

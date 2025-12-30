@@ -13,6 +13,7 @@
   let trailType = currentFilters.trailType || "";
   let minDistance = currentFilters.minDistance || "";
   let maxDistance = currentFilters.maxDistance || "";
+  let minRating = currentFilters.minRating || "";
   let selectedFeatures: string[] = currentFilters.features
     ? currentFilters.features.split(",")
     : [];
@@ -39,6 +40,7 @@
     if (trailType) params.set("trailType", trailType);
     if (minDistance) params.set("minDistance", minDistance);
     if (maxDistance) params.set("maxDistance", maxDistance);
+    if (minRating) params.set("minRating", minRating);
     if (selectedFeatures.length > 0)
       params.set("features", selectedFeatures.join(","));
     if (dogFriendly) params.set("dogFriendly", "true");
@@ -55,6 +57,7 @@
     trailType = "";
     minDistance = "";
     maxDistance = "";
+    minRating = "";
     selectedFeatures = [];
     dogFriendly = false;
     goto("/hikes");
@@ -67,6 +70,7 @@
     (difficulty ? 1 : 0) +
     (trailType ? 1 : 0) +
     (minDistance || maxDistance ? 1 : 0) +
+    (minRating ? 1 : 0) +
     selectedFeatures.length +
     (dogFriendly ? 1 : 0);
 </script>
@@ -236,6 +240,28 @@
         aria-label="Maximum distance in miles"
       />
     </div>
+  </div>
+
+  <!-- Minimum Rating -->
+  <div class="mb-3">
+    <label
+      for="minRating"
+      class="block text-sm font-medium text-gray-700 mb-1.5"
+    >
+      Minimum Rating
+    </label>
+    <select
+      id="minRating"
+      bind:value={minRating}
+      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+    >
+      <option value="">Any Rating</option>
+      <option value="1">⭐ 1+ Stars</option>
+      <option value="2">⭐⭐ 2+ Stars</option>
+      <option value="3">⭐⭐⭐ 3+ Stars</option>
+      <option value="4">⭐⭐⭐⭐ 4+ Stars</option>
+      <option value="5">⭐⭐⭐⭐⭐ 5 Stars</option>
+    </select>
   </div>
 
   <!-- Trail Features Multi-Select -->

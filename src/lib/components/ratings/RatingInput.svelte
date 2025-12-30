@@ -17,6 +17,16 @@
 
   $: displayRating = hoveredRating || rating;
 
+  // Create reactive array of star fill values
+  $: starFills = Array(5)
+    .fill(0)
+    .map((_, i) => {
+      const diff = displayRating - i;
+      if (diff >= 1) return 100;
+      if (diff >= 0.5) return 50;
+      return 0;
+    });
+
   function handleStarClick(newRating: number) {
     if (disabled) return;
     dispatch("change", newRating);
@@ -29,13 +39,6 @@
 
   function handleMouseLeave() {
     hoveredRating = 0;
-  }
-
-  function getStarFill(starIndex: number): number {
-    const diff = displayRating - starIndex;
-    if (diff >= 1) return 100;
-    if (diff >= 0.5) return 50;
-    return 0;
   }
 </script>
 
@@ -70,7 +73,7 @@
         {/if}
 
         <!-- Star visual -->
-        {#if getStarFill(i) === 100}
+        {#if starFills[i] === 100}
           <!-- Full star -->
           <svg
             class="{sizeClasses[size]} pointer-events-none"
@@ -83,7 +86,7 @@
               d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
             />
           </svg>
-        {:else if getStarFill(i) === 50}
+        {:else if starFills[i] === 50}
           <!-- Half star -->
           <svg
             class="{sizeClasses[size]} pointer-events-none"

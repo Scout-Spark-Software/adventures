@@ -13,6 +13,7 @@ export const load: PageServerLoad = async ({ fetch, url }) => {
     "firePolicy",
     "minCost",
     "maxCost",
+    "minRating",
     "amenities",
     "facilities",
     "reservationRequired",

@@ -24,6 +24,8 @@
   let editShowPreview = false;
   let isCreating = false;
   let filterType: "all" | "hikes" | "camping" = "all";
+  let deletingNoteId: string | null = null;
+  let isDeleting = false;
 
   // Markdown rendering (simple implementation)
   function renderMarkdown(text: string): string {
@@ -146,8 +148,7 @@
   }
 
   async function deleteNote(noteId: string) {
-    if (!confirm("Are you sure you want to delete this note?")) return;
-
+    isDeleting = true;
     error = "";
 
     try {
@@ -157,9 +158,12 @@
 
       if (!response.ok) throw new Error("Failed to delete note");
 
+      deletingNoteId = null;
       await loadNotes();
     } catch (e) {
       error = e instanceof Error ? e.message : "Failed to delete note";
+    } finally {
+      isDeleting = false;
     }
   }
 
@@ -434,7 +438,7 @@
                   Edit
                 </button>
                 <button
-                  on:click={() => deleteNote(note.id)}
+                  on:click={() => (deletingNoteId = note.id)}
                   class="text-sm text-red-600 hover:text-red-800"
                 >
                   Delete
@@ -450,4 +454,41 @@
       {/each}
     </div>
   {/if}
+{/if}
+
+<!-- Delete Confirmation Modal -->
+{#if deletingNoteId}
+  <div
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+  >
+    <div class="bg-white rounded-lg max-w-md w-full p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">Delete Note?</h3>
+      <p class="text-gray-600 mb-6">
+        Are you sure you want to delete this note? This action cannot be undone.
+      </p>
+      {#if error}
+        <div
+          class="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm"
+        >
+          {error}
+        </div>
+      {/if}
+      <div class="flex gap-3 justify-end">
+        <button
+          on:click={() => (deletingNoteId = null)}
+          disabled={isDeleting}
+          class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+        >
+          Cancel
+        </button>
+        <button
+          on:click={() => deleteNote(deletingNoteId)}
+          disabled={isDeleting}
+          class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+        >
+          {isDeleting ? "Deleting..." : "Delete"}
+        </button>
+      </div>
+    </div>
+  </div>
 {/if}

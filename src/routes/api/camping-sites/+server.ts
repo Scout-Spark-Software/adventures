@@ -1,7 +1,7 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { db } from "$lib/db";
-import { campingSites, addresses } from "$lib/db/schemas";
+import { campingSites, addresses, ratingAggregates } from "$lib/db/schemas";
 import { eq, and, or, desc, ilike, gte, lte, sql } from "drizzle-orm";
 import { requireAuth } from "$lib/auth/middleware";
 import { addToModerationQueue } from "$lib/moderation";
@@ -19,6 +19,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
   const firePolicy = url.searchParams.get("firePolicy");
   const minCost = url.searchParams.get("minCost");
   const maxCost = url.searchParams.get("maxCost");
+  const minRating = url.searchParams.get("minRating");
   const amenitiesParam = url.searchParams.get("amenities");
   const facilitiesParam = url.searchParams.get("facilities");
   const reservationRequired = url.searchParams.get("reservationRequired");
@@ -90,11 +91,12 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     }
   }
 
-  // Build query with optional address join for search
-  let query;
-  if (search) {
-    // Join with addresses for location search
-    query = db
+  // Build query with optional joins for search and rating filter
+  const needsJoin = search || minRating;
+
+  if (needsJoin) {
+    // Join with addresses for location search and/or rating_aggregates for rating filter
+    let query = db
       .select({
         id: campingSites.id,
         name: campingSites.name,
@@ -112,25 +114,52 @@ export const GET: RequestHandler = async ({ url, locals }) => {
         reservationRequired: campingSites.reservationRequired,
         siteType: campingSites.siteType,
         firePolicy: campingSites.firePolicy,
+        policies: campingSites.policies,
         status: campingSites.status,
         featured: campingSites.featured,
         createdBy: campingSites.createdBy,
         createdAt: campingSites.createdAt,
         updatedAt: campingSites.updatedAt,
       })
-      .from(campingSites)
-      .leftJoin(addresses, eq(campingSites.addressId, addresses.id))
-      .where(
-        and(
-          ...conditions,
-          or(
-            ilike(campingSites.name, `%${search}%`),
-            ilike(campingSites.description, `%${search}%`),
-            ilike(addresses.city, `%${search}%`),
-            ilike(addresses.state, `%${search}%`),
-          ),
+      .from(campingSites);
+
+    // Add address join if searching
+    if (search) {
+      query = query.leftJoin(
+        addresses,
+        eq(campingSites.addressId, addresses.id),
+      );
+    }
+
+    // Add rating join if filtering by rating
+    if (minRating) {
+      query = query.leftJoin(
+        ratingAggregates,
+        eq(campingSites.id, ratingAggregates.campingSiteId),
+      );
+    }
+
+    // Build where conditions
+    const whereConditions = [...conditions];
+
+    if (search) {
+      whereConditions.push(
+        or(
+          ilike(campingSites.name, `%${search}%`),
+          ilike(campingSites.description, `%${search}%`),
+          ilike(addresses.city, `%${search}%`),
+          ilike(addresses.state, `%${search}%`),
         ),
-      )
+      );
+    }
+
+    if (minRating) {
+      whereConditions.push(sql`${ratingAggregates.averageRating} IS NOT NULL`);
+      whereConditions.push(gte(ratingAggregates.averageRating, minRating));
+    }
+
+    query = query
+      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
       .limit(limit)
       .offset(offset)
       .orderBy(desc(campingSites.createdAt));
